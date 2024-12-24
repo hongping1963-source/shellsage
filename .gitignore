@@ -1,6 +1,9 @@
-out
-node_modules
-.vscode-test/
+out/
+node_modules/
+python_env/
 *.vsix
+.vscode-test/
+docs/
+CHANGELOG.md
 .DS_Store
 temp_thefuck.py
