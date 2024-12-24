@@ -1,0 +1,133 @@
+{
+  "name": "shellsage",
+  "displayName": "ShellSage",
+  "description": "An intelligent VS Code extension that automatically corrects and enhances terminal commands",
+  "version": "0.0.1",
+  "publisher": "vscode-thefuck-team",
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hongping1224/shellsage"
+  },
+  "bugs": {
+    "url": "https://github.com/hongping1224/shellsage/issues"
+  },
+  "homepage": "https://github.com/hongping1224/shellsage#readme",
+  "categories": [
+    "Other",
+    "Snippets",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "command-line",
+    "shell",
+    "correction",
+    "terminal",
+    "thefuck",
+    "command",
+    "fix"
+  ],
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "activationEvents": [
+    "onCommand:vscode-thefuck.correct",
+    "onCommand:vscode-thefuck.showHistory",
+    "onTerminalProfile"
+  ],
+  "main": "./out/extension.js",
+  "browser": "./dist/web/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-thefuck.correct",
+        "title": "TheFuck: 纠正命令",
+        "category": "TheFuck"
+      },
+      {
+        "command": "vscode-thefuck.showHistory",
+        "title": "TheFuck: 显示历史记录",
+        "category": "TheFuck"
+      }
+    ],
+    "configuration": {
+      "title": "VS Code TheFuck",
+      "properties": {
+        "vscode-thefuck.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Python 可执行文件的路径。留空使用内置 Python 环境。"
+        },
+        "vscode-thefuck.thefuckPath": {
+          "type": "string",
+          "default": "",
+          "description": "TheFuck 可执行文件的路径。留空使用内置 TheFuck。"
+        },
+        "vscode-thefuck.showDiff": {
+          "type": "boolean",
+          "default": true,
+          "description": "显示命令修改的差异。"
+        },
+        "vscode-thefuck.requireConfirmation": {
+          "type": "boolean",
+          "default": true,
+          "description": "执行纠正后的命令前需要确认。"
+        },
+        "vscode-thefuck.enableNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用通知提示。"
+        },
+        "vscode-thefuck.historySize": {
+          "type": "number",
+          "default": 100,
+          "description": "保存的历史记录数量。"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "vscode-thefuck.correct",
+        "key": "ctrl+alt+f",
+        "mac": "cmd+alt+f",
+        "when": "terminalFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package-web": "webpack --mode production --config webpack.config.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.5",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "diff": "^5.1.0"
+  }
+}
