@@ -2,7 +2,7 @@
   "name": "shellsage",
   "displayName": "ShellSage",
   "description": "An intelligent VS Code extension that automatically corrects and enhances terminal commands",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "vscode-thefuck-team",
   "private": false,
   "license": "MIT",
@@ -20,10 +20,13 @@
     "Programming Languages"
   ],
   "keywords": [
+    "vscode-extension",
+    "terminal",
+    "cli",
     "command-line",
     "shell",
-    "correction",
-    "terminal",
+    "command-correction",
+    "productivity",
     "thefuck",
     "command",
     "fix"
