@@ -1,73 +1,92 @@
 # ShellSage
 
-ShellSage 是一个智能的命令行助手，它可以帮助你更高效地使用命令行。它结合了命令纠错、智能建议和使用分析等功能，让你的命令行体验更加流畅。
+🚀 Intelligent Command-Line Assistant for VS Code
 
-## 主要特性
+ShellSage is a powerful VS Code extension that enhances your terminal experience with smart command suggestions, advanced statistics, and intelligent error prevention.
 
-### 1. 智能命令建议
-- 基于历史记录的智能建议
-- 上下文感知的命令补全
-- 模糊匹配支持
-- 实时命令提示
+## ✨ Features
 
-### 2. 高级统计分析
-- 命令使用模式分析
-- 错误模式识别
-- 使用时间分布统计
-- 命令复杂度分析
+See our [detailed features documentation](docs/FEATURES.md) for a complete list of capabilities.
 
-### 3. 预测性命令推荐
-- 基于序列的命令预测
-- 时间相关性分析
-- 命令类型关联分析
-- 智能排名系统
+- 🤖 Intelligent Command Suggestions
+- 📊 Advanced Usage Statistics
+- 🔍 Smart Pattern Recognition
+- ⚡ Real-time Error Prevention
+- 📈 Command Complexity Analysis
+- 🎯 Context-Aware Predictions
 
-### 4. 错误纠正
-- 自动错误检测
-- 智能命令纠正
-- 多样化的纠正建议
-- 学习用户偏好
+## 🚀 Quick Start
 
-## 安装
+1. Install the extension from VS Code Marketplace
+2. Open a terminal in VS Code
+3. Start typing commands and see intelligent suggestions
+4. Use `Ctrl+Shift+P` and type "ShellSage" to access all features
 
-```bash
-npm install shellsage
-```
+## 📚 Examples
 
-## 使用方法
+We provide comprehensive examples for common development workflows:
 
-1. 在VS Code中安装ShellSage扩展
-2. 在终端中使用时，ShellSage会自动提供命令建议和纠错
-3. 使用快捷键 `Ctrl+Shift+Space` 查看命令推荐
-4. 通过状态栏查看命令统计信息
+### Development Tools
+- [Git Workflow Guide](examples/git-workflow.md) - Version control best practices
+- [Docker Workflow Guide](examples/docker-workflow.md) - Container management examples
+- [NPM Workflow Guide](examples/npm-workflow.md) - Node.js package management
+- [Linux Commands Guide](examples/linux-commands.md) - Essential Linux operations
 
-## 配置选项
+Each guide includes:
+- 📝 Detailed command explanations
+- 🎯 Common use cases
+- ⚠️ Error prevention tips
+- 💡 Best practices
 
-```json
-{
-    "shellsage.suggestions.enabled": true,
-    "shellsage.suggestions.triggerCharacters": ["-", ".", "/"],
-    "shellsage.suggestions.maxItems": 5,
-    "shellsage.recommendations.enabled": true,
-    "shellsage.recommendations.maxItems": 5
-}
-```
+## 🎯 Use Cases
 
-## 统计信息
+1. **Command Suggestions**
+   - Get context-aware command completions
+   - Receive intelligent suggestions based on history
+   - See command popularity and success rates
 
-ShellSage提供丰富的使用统计信息：
+2. **Error Prevention**
+   - Catch common mistakes before they happen
+   - Get instant feedback on command syntax
+   - Learn from past errors
 
-- 命令使用频率
-- 错误率分析
-- 时间分布统计
-- 命令类型分布
-- 复杂度分析
-- 序列模式分析
+3. **Productivity Enhancement**
+   - Quick access to frequently used commands
+   - Smart command sequence suggestions
+   - Time-based command recommendations
 
-## 贡献
+## 🔧 Configuration
 
-欢迎提交Issue和Pull Request！
+ShellSage is highly configurable. Access settings through:
+1. VS Code Settings (`Ctrl+,`)
+2. Search for "ShellSage"
+3. Customize according to your needs
 
-## 许可证
+## 📊 Statistics
 
-MIT
+View your command usage statistics:
+1. Press `Ctrl+Shift+P`
+2. Type "ShellSage: Show Statistics"
+3. See detailed analytics about your command usage
+
+## 🤝 Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🌟 Show Your Support
+
+If you find ShellSage helpful, please:
+- Star this repository
+- Share with your friends
+- [Report issues](https://github.com/hongping1963-source/shellsage/issues)
+- [Submit feature requests](https://github.com/hongping1963-source/shellsage/issues)
+
+## 📞 Contact
+
+- Create an [issue](https://github.com/hongping1963-source/shellsage/issues) for bug reports
+- Submit a [pull request](https://github.com/hongping1963-source/shellsage/pulls) for contributions
+- Star the repository to show your support!
