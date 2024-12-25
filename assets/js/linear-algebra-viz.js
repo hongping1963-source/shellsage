@@ -256,10 +256,182 @@ function createVectorRotation(container) {
     updateRotation();
 }
 
+// 矩阵变换可视化
+function createMatrixTransformation(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 网格
+    function drawGrid() {
+        const gridSize = 8;
+        const gridStep = scale;
+        
+        // 移除旧的网格
+        g.selectAll(".grid-line").remove();
+        
+        // 绘制新的网格
+        for (let i = -gridSize; i <= gridSize; i++) {
+            // 垂直线
+            g.append("line")
+                .attr("class", "grid-line")
+                .attr("x1", i * gridStep)
+                .attr("y1", -gridSize * gridStep)
+                .attr("x2", i * gridStep)
+                .attr("y2", gridSize * gridStep)
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 0.5);
+            
+            // 水平线
+            g.append("line")
+                .attr("class", "grid-line")
+                .attr("x1", -gridSize * gridStep)
+                .attr("y1", i * gridStep)
+                .attr("x2", gridSize * gridStep)
+                .attr("y2", i * gridStep)
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 0.5);
+        }
+    }
+    
+    // 绘制基向量
+    function drawBasisVectors(matrix) {
+        // 移除旧的基向量
+        g.selectAll(".basis-vector").remove();
+        
+        // 绘制变换后的基向量
+        const i_hat = {x: matrix[0][0], y: -matrix[1][0]};  // 第一列
+        const j_hat = {x: matrix[0][1], y: -matrix[1][1]};  // 第二列
+        
+        drawVector(g, {x: 0, y: 0}, 
+            {x: i_hat.x * scale, y: i_hat.y * scale}, 
+            "red", "i").attr("class", "basis-vector");
+        
+        drawVector(g, {x: 0, y: 0}, 
+            {x: j_hat.x * scale, y: j_hat.y * scale}, 
+            "blue", "j").attr("class", "basis-vector");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "matrix-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <label>变换矩阵:</label><br>
+            <input type="number" id="m11" value="1" step="0.1" style="width:60px">
+            <input type="number" id="m12" value="0" step="0.1" style="width:60px"><br>
+            <input type="number" id="m21" value="0" step="0.1" style="width:60px">
+            <input type="number" id="m22" value="1" step="0.1" style="width:60px">
+        `);
+    
+    // 预设变换按钮
+    controls.append("div")
+        .attr("class", "preset-buttons")
+        .html(`
+            <button onclick="updateMatrix([1,0,0,1])">单位矩阵</button>
+            <button onclick="updateMatrix([0,-1,1,0])">旋转90°</button>
+            <button onclick="updateMatrix([2,0,0,2])">放大2倍</button>
+            <button onclick="updateMatrix([1,1,0,1])">剪切</button>
+        `);
+    
+    // 更新函数
+    function updateTransformation() {
+        const matrix = [
+            [parseFloat(d3.select("#m11").property("value")), 
+             parseFloat(d3.select("#m12").property("value"))],
+            [parseFloat(d3.select("#m21").property("value")), 
+             parseFloat(d3.select("#m22").property("value"))]
+        ];
+        
+        drawGrid();
+        drawBasisVectors(matrix);
+    }
+    
+    // 添加事件监听器
+    ["m11", "m12", "m21", "m22"].forEach(id => {
+        d3.select("#" + id).on("input", updateTransformation);
+    });
+    
+    // 初始化
+    updateTransformation();
+    
+    // 暴露更新矩阵的函数给全局作用域
+    window.updateMatrix = function(values) {
+        d3.select("#m11").property("value", values[0]);
+        d3.select("#m12").property("value", values[1]);
+        d3.select("#m21").property("value", values[2]);
+        d3.select("#m22").property("value", values[3]);
+        updateTransformation();
+    };
+}
+
+// 特征值和特征向量可视化
+function createEigenDemo(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    function drawEigenVectors(matrix, vector) {
+        // 移除旧的向量
+        g.selectAll(".eigen-vector").remove();
+        
+        // 原始向量
+        const x = vector[0];
+        const y = vector[1];
+        drawVector(g, {x: 0, y: 0}, 
+            {x: x * scale, y: -y * scale}, 
+            "blue", "v").attr("class", "eigen-vector");
+        
+        // 变换后的向量
+        const transformed = [
+            matrix[0][0] * x + matrix[0][1] * y,
+            matrix[1][0] * x + matrix[1][1] * y
+        ];
+        drawVector(g, {x: 0, y: 0}, 
+            {x: transformed[0] * scale, y: -transformed[1] * scale}, 
+            "red", "Av").attr("class", "eigen-vector");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "eigen-controls");
+    
+    controls.append("div")
+        .html(`
+            <label>向量:</label><br>
+            <input type="range" id="angle" min="0" max="360" value="0">
+            <span id="angle-value">0°</span>
+        `);
+    
+    // 更新函数
+    function updateEigenDemo() {
+        const angle = parseFloat(d3.select("#angle").property("value"));
+        d3.select("#angle-value").text(angle + "°");
+        
+        const rad = angle * Math.PI / 180;
+        const vector = [Math.cos(rad), Math.sin(rad)];
+        
+        // 使用一个简单的2x2矩阵作为示例
+        const matrix = [[2, 1], [1, 2]];  // 这个矩阵的特征值是3和1
+        
+        drawEigenVectors(matrix, vector);
+    }
+    
+    // 添加事件监听器
+    d3.select("#angle").on("input", updateEigenDemo);
+    
+    // 初始化
+    updateEigenDemo();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
     createVectorAddition,
     createLinearCombination,
-    createVectorRotation
+    createVectorRotation,
+    createMatrixTransformation,
+    createEigenDemo
 };
