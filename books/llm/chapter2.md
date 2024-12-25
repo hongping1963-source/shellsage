@@ -17,6 +17,17 @@ chapter_number: 2
 
 Transformer 通过自注意力机制解决了这些问题。
 
+<div class="visualization-container">
+    <div class="visualization-title">Transformer 架构动画</div>
+    <div id="transformer-animation"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    animateTransformer('#transformer-animation');
+});
+</script>
+
 ## 2.2 Transformer 整体架构
 
 Transformer 采用编码器-解码器（Encoder-Decoder）架构：
@@ -34,6 +45,25 @@ Transformer 采用编码器-解码器（Encoder-Decoder）架构：
 5. **层归一化（Layer Normalization）**
 
 ## 2.3 自注意力机制
+
+<div class="visualization-container">
+    <div class="visualization-title">自注意力权重可视化</div>
+    <div id="attention-visualization"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 示例数据
+    const tokens = ["我", "爱", "机器", "学习"];
+    const attentionWeights = [
+        [0.9, 0.03, 0.05, 0.02],
+        [0.02, 0.8, 0.15, 0.03],
+        [0.1, 0.1, 0.7, 0.1],
+        [0.05, 0.05, 0.1, 0.8]
+    ];
+    visualizeAttention('#attention-visualization', attentionWeights, tokens);
+});
+</script>
 
 ### 2.3.1 计算步骤
 
@@ -98,6 +128,21 @@ $\text{Output} = \text{LayerNorm}(x + \text{Sublayer}(x))$
 
 ## 2.7 训练技巧
 
+<div class="visualization-container">
+    <div class="visualization-title">训练损失曲线</div>
+    <div id="training-visualization"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 示例训练损失数据
+    const trainingLoss = Array.from({length: 100}, (_, i) => 
+        2 * Math.exp(-i/20) + 0.2 * Math.random()
+    );
+    visualizeTraining('#training-visualization', trainingLoss);
+});
+</script>
+
 1. **Warm-up 学习率调度**：
    
    $lr = d_{model}^{-0.5} \cdot \min(step^{-0.5}, step \cdot warmup\_steps^{-1.5})$
@@ -110,10 +155,6 @@ $\text{Output} = \text{LayerNorm}(x + \text{Sublayer}(x))$
 1. 为什么在注意力计算中需要除以 $\sqrt{d_k}$？
 2. 多头注意力相比单头注意力有什么优势？
 3. 位置编码为什么选择正弦和余弦函数？
-
-## 代码实现
-
-在下一章中，我们将用 PyTorch 实现一个简单的 Transformer 模型。
 
 ---
 
