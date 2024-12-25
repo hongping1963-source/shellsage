@@ -1,0 +1,21 @@
+theme: jekyll-theme-cayman
+title: ShellSage
+description: Intelligent Command-Line Assistant for VS Code
+show_downloads: true
+google_analytics:
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Navigation
+nav:
+  - title: Home
+    url: /
+  - title: Documentation
+    url: /docs
+  - title: Blog
+    url: /blog
+  - title: Examples
+    url: /examples
+  - title: GitHub
+    url: https://github.com/hongping1963-source/shellsage
