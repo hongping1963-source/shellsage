@@ -1556,6 +1556,227 @@ function createGaussianEliminationViz(container) {
     updateElimination();
 }
 
+// 向量空间运算可视化
+function createVectorSpaceOperationsViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制向量运算
+    function drawVectorOperation(v1, v2, operation) {
+        // 清除旧的绘制
+        g.selectAll(".vector-op").remove();
+        
+        // 绘制第一个向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v1.x * scale, y: -v1.y * scale}, 
+            "blue", "v₁").attr("class", "vector-op");
+        
+        // 绘制第二个向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v2.x * scale, y: -v2.y * scale}, 
+            "red", "v₂").attr("class", "vector-op");
+        
+        // 计算结果向量
+        let result;
+        switch(operation) {
+            case 'add':
+                result = {x: v1.x + v2.x, y: v1.y + v2.y};
+                // 绘制平行四边形
+                g.append("path")
+                    .attr("class", "vector-op")
+                    .attr("d", `M 0 0 
+                              L ${v1.x * scale} ${-v1.y * scale} 
+                              L ${(v1.x + v2.x) * scale} ${-(v1.y + v2.y) * scale} 
+                              L ${v2.x * scale} ${-v2.y * scale} Z`)
+                    .attr("fill", "none")
+                    .attr("stroke", "#999")
+                    .attr("stroke-dasharray", "5,5");
+                break;
+            case 'subtract':
+                result = {x: v1.x - v2.x, y: v1.y - v2.y};
+                // 绘制v2的反向向量
+                drawVector(g, {x: v1.x * scale, y: -v1.y * scale},
+                    {x: result.x * scale, y: -result.y * scale},
+                    "#999", "-v₂").attr("class", "vector-op");
+                break;
+            case 'scale':
+                const scalar = parseFloat(d3.select("#scalar").property("value"));
+                result = {x: v1.x * scalar, y: v1.y * scalar};
+                break;
+        }
+        
+        // 绘制结果向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: result.x * scale, y: -result.y * scale}, 
+            "green", "result").attr("class", "vector-op");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "vector-space-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-input">
+                <label>向量 1:</label><br>
+                <input type="number" id="v1x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="v1y" value="0" step="0.1" style="width:60px">
+            </div>
+            <div class="vector-input">
+                <label>向量 2:</label><br>
+                <input type="number" id="v2x" value="0" step="0.1" style="width:60px">
+                <input type="number" id="v2y" value="1" step="0.1" style="width:60px">
+            </div>
+            <div class="operation-input">
+                <label>运算:</label>
+                <select id="operation">
+                    <option value="add">加法</option>
+                    <option value="subtract">减法</option>
+                    <option value="scale">标量乘法</option>
+                </select>
+                <input type="number" id="scalar" value="2" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateOperation() {
+        const v1 = {
+            x: parseFloat(d3.select("#v1x").property("value")),
+            y: parseFloat(d3.select("#v1y").property("value"))
+        };
+        const v2 = {
+            x: parseFloat(d3.select("#v2x").property("value")),
+            y: parseFloat(d3.select("#v2y").property("value"))
+        };
+        const operation = d3.select("#operation").property("value");
+        
+        drawVectorOperation(v1, v2, operation);
+        
+        // 显示/隐藏标量输入
+        d3.select("#scalar").style("display", 
+            operation === "scale" ? "inline" : "none");
+    }
+    
+    // 添加事件监听器
+    ["v1x", "v1y", "v2x", "v2y", "operation", "scalar"].forEach(id => {
+        d3.select("#" + id).on("input", updateOperation);
+    });
+    
+    // 初始化
+    updateOperation();
+}
+
+// 子空间可视化
+function createSubspaceViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制子空间
+    function drawSubspace(vectors) {
+        // 清除旧的绘制
+        g.selectAll(".subspace").remove();
+        
+        // 绘制基向量
+        vectors.forEach((v, i) => {
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v.x * scale, y: -v.y * scale}, 
+                ["blue", "red"][i], `v${i+1}`).attr("class", "subspace");
+        });
+        
+        // 根据维数绘制子空间
+        if (vectors.length === 1) {
+            // 一维子空间：直线
+            const v = vectors[0];
+            const t = 5;  // 延伸倍数
+            g.append("line")
+                .attr("class", "subspace")
+                .attr("x1", -v.x * scale * t)
+                .attr("y1", v.y * scale * t)
+                .attr("x2", v.x * scale * t)
+                .attr("y2", -v.y * scale * t)
+                .attr("stroke", "#999")
+                .attr("stroke-width", 1)
+                .attr("stroke-dasharray", "5,5");
+        } else if (vectors.length === 2) {
+            // 二维子空间：平面
+            const t = 5;  // 延伸倍数
+            const points = [];
+            for (let i = -t; i <= t; i++) {
+                for (let j = -t; j <= t; j++) {
+                    const x = vectors[0].x * i + vectors[1].x * j;
+                    const y = vectors[0].y * i + vectors[1].y * j;
+                    points.push([x * scale, -y * scale]);
+                }
+            }
+            
+            // 使用d3的hull生成凸包
+            const hull = d3.polygonHull(points);
+            if (hull) {
+                g.append("path")
+                    .attr("class", "subspace")
+                    .attr("d", `M ${hull.join("L")} Z`)
+                    .attr("fill", "#999")
+                    .attr("fill-opacity", 0.1)
+                    .attr("stroke", "#999")
+                    .attr("stroke-width", 1)
+                    .attr("stroke-dasharray", "5,5");
+            }
+        }
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "subspace-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-input">
+                <label>基向量 1:</label><br>
+                <input type="number" id="b1x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="b1y" value="0" step="0.1" style="width:60px">
+            </div>
+            <div class="vector-input">
+                <label>基向量 2:</label><br>
+                <input type="number" id="b2x" value="0" step="0.1" style="width:60px">
+                <input type="number" id="b2y" value="1" step="0.1" style="width:60px">
+            </div>
+            <div class="dimension-select">
+                <label>维数:</label>
+                <select id="dimension">
+                    <option value="1">1维</option>
+                    <option value="2">2维</option>
+                </select>
+            </div>
+        `);
+    
+    // 更新函数
+    function updateSubspace() {
+        const v1 = {
+            x: parseFloat(d3.select("#b1x").property("value")),
+            y: parseFloat(d3.select("#b1y").property("value"))
+        };
+        const v2 = {
+            x: parseFloat(d3.select("#b2x").property("value")),
+            y: parseFloat(d3.select("#b2y").property("value"))
+        };
+        const dim = parseInt(d3.select("#dimension").property("value"));
+        
+        drawSubspace(dim === 1 ? [v1] : [v1, v2]);
+    }
+    
+    // 添加事件监听器
+    ["b1x", "b1y", "b2x", "b2y", "dimension"].forEach(id => {
+        d3.select("#" + id).on("input", updateSubspace);
+    });
+    
+    // 初始化
+    updateSubspace();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -1573,7 +1794,9 @@ window.LinearAlgebraViz = {
     createSVDViz,
     createSVDApplicationViz,
     createLinearSystemViz,
-    createGaussianEliminationViz
+    createGaussianEliminationViz,
+    createVectorSpaceOperationsViz,
+    createSubspaceViz
 };
 
 // 辅助函数：计算叉积
