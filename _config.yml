@@ -3,16 +3,15 @@ title: ShellSage - Smart Command-Line Assistant for VS Code
 description: Boost your terminal productivity with AI-powered command suggestions, error prevention, and intelligent assistance
 show_downloads: true
 google_analytics:
+
+# Blog settings
+permalink: /:categories/:year/:month/:day/:title/
+
+# Build settings
+markdown: kramdown
 plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
-
-# Blog settings
-permalink: /blog/:year/:month/:day/:title/
-collections:
-  posts:
-    output: true
-    permalink: /blog/:year/:month/:day/:title/
 
 # SEO settings
 tagline: Smart Command-Line Assistant for VS Code
@@ -45,21 +44,3 @@ comments:
     category: General
     category-id: DIC_kwDONhk6XM4ClgRw
     mapping: pathname
-    reactions-enabled: 1
-    theme: preferred_color_scheme
-    language: zh-CN
-
-# Navigation
-nav:
-  - title: Home
-    url: /
-  - title: Documentation
-    url: /docs
-  - title: Blog
-    url: /blog
-  - title: Books
-    url: /books
-  - title: Examples
-    url: /examples
-  - title: GitHub
-    url: https://github.com/hongping1963-source/shellsage
