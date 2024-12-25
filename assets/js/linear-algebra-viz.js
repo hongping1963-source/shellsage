@@ -948,9 +948,9 @@ function createEigenViz(container) {
     // 更新函数
     function updateEigenVectors() {
         const matrix = [
-            [parseFloat(d3.select("#m11").property("value")),
+            [parseFloat(d3.select("#m11").property("value")), 
              parseFloat(d3.select("#m12").property("value"))],
-            [parseFloat(d3.select("#m21").property("value")),
+            [parseFloat(d3.select("#m21").property("value")), 
              parseFloat(d3.select("#m22").property("value"))]
         ];
         
@@ -1777,6 +1777,227 @@ function createSubspaceViz(container) {
     updateSubspace();
 }
 
+// 内积空间可视化
+function createInnerProductViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制向量和内积
+    function drawInnerProduct(v1, v2) {
+        // 清除旧的绘制
+        g.selectAll(".inner-product").remove();
+        
+        // 绘制向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v1.x * scale, y: -v1.y * scale}, 
+            "blue", "v₁").attr("class", "inner-product");
+        
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v2.x * scale, y: -v2.y * scale}, 
+            "red", "v₂").attr("class", "inner-product");
+        
+        // 计算内积
+        const dot = v1.x * v2.x + v1.y * v2.y;
+        
+        // 计算投影
+        const v2_norm_squared = v2.x * v2.x + v2.y * v2.y;
+        const proj_scale = dot / v2_norm_squared;
+        const proj = {
+            x: v2.x * proj_scale,
+            y: v2.y * proj_scale
+        };
+        
+        // 绘制投影
+        drawVector(g, {x: 0, y: 0}, 
+            {x: proj.x * scale, y: -proj.y * scale}, 
+            "green", "proj").attr("class", "inner-product");
+        
+        // 绘制投影线
+        g.append("line")
+            .attr("class", "inner-product")
+            .attr("x1", v1.x * scale)
+            .attr("y1", -v1.y * scale)
+            .attr("x2", proj.x * scale)
+            .attr("y2", -proj.y * scale)
+            .attr("stroke", "#999")
+            .attr("stroke-dasharray", "5,5");
+        
+        // 添加角度标记
+        const angle = Math.atan2(v2.y, v2.x) - Math.atan2(v1.y, v1.x);
+        const r = 30;
+        const arcPath = d3.arc()({
+            innerRadius: r,
+            outerRadius: r,
+            startAngle: Math.atan2(-v1.y, v1.x),
+            endAngle: Math.atan2(-v2.y, v2.x)
+        });
+        
+        g.append("path")
+            .attr("class", "inner-product")
+            .attr("d", arcPath)
+            .attr("fill", "none")
+            .attr("stroke", "#999");
+        
+        // 添加信息标签
+        g.append("text")
+            .attr("class", "inner-product")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text(`内积: ${dot.toFixed(2)}`)
+            .style("font-size", "14px");
+        
+        g.append("text")
+            .attr("class", "inner-product")
+            .attr("x", -150)
+            .attr("y", -130)
+            .text(`角度: ${(angle * 180 / Math.PI).toFixed(2)}°`)
+            .style("font-size", "14px");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "inner-product-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-input">
+                <label>向量 1:</label><br>
+                <input type="number" id="ip1x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="ip1y" value="0" step="0.1" style="width:60px">
+            </div>
+            <div class="vector-input">
+                <label>向量 2:</label><br>
+                <input type="number" id="ip2x" value="0" step="0.1" style="width:60px">
+                <input type="number" id="ip2y" value="1" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateInnerProduct() {
+        const v1 = {
+            x: parseFloat(d3.select("#ip1x").property("value")),
+            y: parseFloat(d3.select("#ip1y").property("value"))
+        };
+        const v2 = {
+            x: parseFloat(d3.select("#ip2x").property("value")),
+            y: parseFloat(d3.select("#ip2y").property("value"))
+        };
+        
+        drawInnerProduct(v1, v2);
+    }
+    
+    // 添加事件监听器
+    ["ip1x", "ip1y", "ip2x", "ip2y"].forEach(id => {
+        d3.select("#" + id).on("input", updateInnerProduct);
+    });
+    
+    // 初始化
+    updateInnerProduct();
+}
+
+// 正交性可视化
+function createOrthogonalityViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制正交向量组
+    function drawOrthogonalVectors(vectors) {
+        // 清除旧的绘制
+        g.selectAll(".orthogonal").remove();
+        
+        // 绘制向量
+        vectors.forEach((v, i) => {
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v.x * scale, y: -v.y * scale}, 
+                ["blue", "red", "green"][i], 
+                `v${i+1}`).attr("class", "orthogonal");
+        });
+        
+        // 计算内积矩阵
+        const n = vectors.length;
+        const dots = Array(n).fill().map(() => Array(n).fill(0));
+        for (let i = 0; i < n; i++) {
+            for (let j = i; j < n; j++) {
+                const dot = vectors[i].x * vectors[j].x + 
+                           vectors[i].y * vectors[j].y;
+                dots[i][j] = dots[j][i] = dot;
+            }
+        }
+        
+        // 添加内积信息
+        g.append("text")
+            .attr("class", "orthogonal")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text("内积矩阵:")
+            .style("font-size", "14px");
+        
+        dots.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "orthogonal")
+                .attr("x", -150)
+                .attr("y", -130 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "orthogonality-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-input">
+                <label>向量 1:</label><br>
+                <input type="number" id="o1x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="o1y" value="0" step="0.1" style="width:60px">
+            </div>
+            <div class="vector-input">
+                <label>向量 2:</label><br>
+                <input type="number" id="o2x" value="0" step="0.1" style="width:60px">
+                <input type="number" id="o2y" value="1" step="0.1" style="width:60px">
+            </div>
+            <div class="vector-input">
+                <label>向量 3:</label><br>
+                <input type="number" id="o3x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="o3y" value="1" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateOrthogonality() {
+        const vectors = [
+            {
+                x: parseFloat(d3.select("#o1x").property("value")),
+                y: parseFloat(d3.select("#o1y").property("value"))
+            },
+            {
+                x: parseFloat(d3.select("#o2x").property("value")),
+                y: parseFloat(d3.select("#o2y").property("value"))
+            },
+            {
+                x: parseFloat(d3.select("#o3x").property("value")),
+                y: parseFloat(d3.select("#o3y").property("value"))
+            }
+        ];
+        
+        drawOrthogonalVectors(vectors);
+    }
+    
+    // 添加事件监听器
+    ["o1x", "o1y", "o2x", "o2y", "o3x", "o3y"].forEach(id => {
+        d3.select("#" + id).on("input", updateOrthogonality);
+    });
+    
+    // 初始化
+    updateOrthogonality();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -1796,7 +2017,9 @@ window.LinearAlgebraViz = {
     createLinearSystemViz,
     createGaussianEliminationViz,
     createVectorSpaceOperationsViz,
-    createSubspaceViz
+    createSubspaceViz,
+    createInnerProductViz,
+    createOrthogonalityViz
 };
 
 // 辅助函数：计算叉积
