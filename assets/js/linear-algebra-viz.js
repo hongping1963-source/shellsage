@@ -1998,6 +1998,318 @@ function createOrthogonalityViz(container) {
     updateOrthogonality();
 }
 
+// 线性变换可视化
+function createLinearTransformViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制网格和变换后的网格
+    function drawGrid(matrix, color = "#999", opacity = 0.2) {
+        const gridSize = 10;
+        const step = 1;
+        
+        // 绘制网格线
+        for (let i = -gridSize; i <= gridSize; i += step) {
+            // 垂直线
+            const v1 = transformPoint([i, -gridSize], matrix);
+            const v2 = transformPoint([i, gridSize], matrix);
+            g.append("line")
+                .attr("class", "grid-line")
+                .attr("x1", v1[0] * scale)
+                .attr("y1", -v1[1] * scale)
+                .attr("x2", v2[0] * scale)
+                .attr("y2", -v2[1] * scale)
+                .attr("stroke", color)
+                .attr("stroke-width", 1)
+                .attr("opacity", opacity);
+            
+            // 水平线
+            const h1 = transformPoint([-gridSize, i], matrix);
+            const h2 = transformPoint([gridSize, i], matrix);
+            g.append("line")
+                .attr("class", "grid-line")
+                .attr("x1", h1[0] * scale)
+                .attr("y1", -h1[1] * scale)
+                .attr("x2", h2[0] * scale)
+                .attr("y2", -h2[1] * scale)
+                .attr("stroke", color)
+                .attr("stroke-width", 1)
+                .attr("opacity", opacity);
+        }
+    }
+    
+    // 变换点
+    function transformPoint(point, matrix) {
+        return [
+            matrix[0][0] * point[0] + matrix[0][1] * point[1],
+            matrix[1][0] * point[0] + matrix[1][1] * point[1]
+        ];
+    }
+    
+    // 绘制基向量
+    function drawBasisVectors(matrix) {
+        // 绘制原始基向量
+        drawVector(g, {x: 0, y: 0}, {x: scale, y: 0}, "blue", "e₁");
+        drawVector(g, {x: 0, y: 0}, {x: 0, y: scale}, "red", "e₂");
+        
+        // 绘制变换后的基向量
+        const v1 = transformPoint([1, 0], matrix);
+        const v2 = transformPoint([0, 1], matrix);
+        
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v1[0] * scale, y: -v1[1] * scale}, 
+            "blue", "T(e₁)");
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v2[0] * scale, y: -v2[1] * scale}, 
+            "red", "T(e₂)");
+    }
+    
+    // 绘制变换
+    function drawTransformation(matrix) {
+        // 清除旧的绘制
+        g.selectAll(".grid-line").remove();
+        g.selectAll(".vector").remove();
+        
+        // 绘制原始网格
+        drawGrid([[1, 0], [0, 1]], "#999", 0.1);
+        
+        // 绘制变换后的网格
+        drawGrid(matrix, "#666", 0.2);
+        
+        // 绘制基向量
+        drawBasisVectors(matrix);
+        
+        // 添加变换矩阵信息
+        g.append("text")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text(`变换矩阵:`)
+            .style("font-size", "14px");
+        
+        g.append("text")
+            .attr("x", -150)
+            .attr("y", -130)
+            .text(`[${matrix[0][0].toFixed(2)}, ${matrix[0][1].toFixed(2)}]`)
+            .style("font-size", "12px");
+        
+        g.append("text")
+            .attr("x", -150)
+            .attr("y", -110)
+            .text(`[${matrix[1][0].toFixed(2)}, ${matrix[1][1].toFixed(2)}]`)
+            .style("font-size", "12px");
+        
+        // 计算行列式
+        const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+        g.append("text")
+            .attr("x", -150)
+            .attr("y", -80)
+            .text(`行列式: ${det.toFixed(2)}`)
+            .style("font-size", "14px");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "transformation-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>变换矩阵:</label><br>
+                <input type="number" id="m11" value="1" step="0.1" style="width:60px">
+                <input type="number" id="m12" value="0" step="0.1" style="width:60px"><br>
+                <input type="number" id="m21" value="0" step="0.1" style="width:60px">
+                <input type="number" id="m22" value="1" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 预设变换
+    controls.append("div")
+        .html(`
+            <div class="preset-transforms">
+                <label>预设变换:</label><br>
+                <select id="preset-transform">
+                    <option value="identity">恒等变换</option>
+                    <option value="rotation">旋转 (90°)</option>
+                    <option value="scale">缩放 (2x)</option>
+                    <option value="shear">切变</option>
+                    <option value="reflection">反射 (x轴)</option>
+                    <option value="projection">投影 (x轴)</option>
+                </select>
+            </div>
+        `);
+    
+    // 更新函数
+    function updateTransformation() {
+        const matrix = [
+            [parseFloat(d3.select("#m11").property("value")),
+             parseFloat(d3.select("#m12").property("value"))],
+            [parseFloat(d3.select("#m21").property("value")),
+             parseFloat(d3.select("#m22").property("value"))]
+        ];
+        
+        drawTransformation(matrix);
+    }
+    
+    // 预设变换处理
+    function handlePresetTransform() {
+        const preset = d3.select("#preset-transform").property("value");
+        let matrix;
+        
+        switch (preset) {
+            case "identity":
+                matrix = [[1, 0], [0, 1]];
+                break;
+            case "rotation":
+                matrix = [[0, -1], [1, 0]];
+                break;
+            case "scale":
+                matrix = [[2, 0], [0, 2]];
+                break;
+            case "shear":
+                matrix = [[1, 1], [0, 1]];
+                break;
+            case "reflection":
+                matrix = [[1, 0], [0, -1]];
+                break;
+            case "projection":
+                matrix = [[1, 0], [0, 0]];
+                break;
+            default:
+                matrix = [[1, 0], [0, 1]];
+        }
+        
+        // 更新输入框
+        d3.select("#m11").property("value", matrix[0][0]);
+        d3.select("#m12").property("value", matrix[0][1]);
+        d3.select("#m21").property("value", matrix[1][0]);
+        d3.select("#m22").property("value", matrix[1][1]);
+        
+        // 更新可视化
+        drawTransformation(matrix);
+    }
+    
+    // 添加事件监听器
+    ["m11", "m12", "m21", "m22"].forEach(id => {
+        d3.select("#" + id).on("input", updateTransformation);
+    });
+    
+    d3.select("#preset-transform").on("change", handlePresetTransform);
+    
+    // 初始化
+    updateTransformation();
+}
+
+// 特征值和特征向量可视化
+function createEigenViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制矩阵变换和特征向量
+    function drawEigenVectors(matrix, eigenvals, eigenvecs) {
+        // 清除旧的绘制
+        g.selectAll(".eigen").remove();
+        
+        // 绘制网格
+        drawGrid(g);
+        
+        // 绘制变换后的网格
+        drawTransformedGrid(g, matrix);
+        
+        // 绘制特征向量及其变换
+        eigenvecs.forEach((v, i) => {
+            const eigenval = eigenvals[i];
+            const transformed = [
+                matrix[0][0]*v[0] + matrix[0][1]*v[1],
+                matrix[1][0]*v[0] + matrix[1][1]*v[1]
+            ];
+            
+            // 原始特征向量
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v[0] * scale, y: -v[1] * scale}, 
+                "blue", `v${i+1}`).attr("class", "eigen");
+            
+            // 变换后的特征向量
+            drawVector(g, {x: 0, y: 0}, 
+                {x: transformed[0] * scale, y: -transformed[1] * scale}, 
+                "red", `λ${i+1}v${i+1}`).attr("class", "eigen");
+            
+            // 添加特征值标签
+            g.append("text")
+                .attr("class", "eigen")
+                .attr("x", v[0] * scale + 10)
+                .attr("y", -v[1] * scale + 10)
+                .text(`λ${i+1} = ${eigenval.toFixed(2)}`)
+                .style("font-size", "12px");
+        });
+    }
+    
+    // 计算2x2矩阵的特征值和特征向量
+    function computeEigen(matrix) {
+        // 计算特征多项式系数
+        const a = 1;
+        const b = -(matrix[0][0] + matrix[1][1]);
+        const c = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
+        
+        // 求解特征值
+        const discriminant = Math.sqrt(b*b - 4*a*c);
+        const eigenvals = [
+            (-b + discriminant)/(2*a),
+            (-b - discriminant)/(2*a)
+        ];
+        
+        // 求解特征向量
+        const eigenvecs = eigenvals.map(lambda => {
+            const temp = matrix[0][1] !== 0 ? 
+                [matrix[0][1], lambda - matrix[0][0]] :
+                [lambda - matrix[1][1], matrix[1][0]];
+            const norm = Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
+            return [temp[0]/norm, temp[1]/norm];
+        });
+        
+        return {eigenvals, eigenvecs};
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "eigen-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>变换矩阵:</label><br>
+                <input type="number" id="m11" value="2" step="0.1" style="width:60px">
+                <input type="number" id="m12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="m21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="m22" value="2" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateEigenVectors() {
+        const matrix = [
+            [parseFloat(d3.select("#m11").property("value")), 
+             parseFloat(d3.select("#m12").property("value"))],
+            [parseFloat(d3.select("#m21").property("value")), 
+             parseFloat(d3.select("#m22").property("value"))]
+        ];
+        
+        const {eigenvals, eigenvecs} = computeEigen(matrix);
+        drawEigenVectors(matrix, eigenvals, eigenvecs);
+    }
+    
+    // 添加事件监听器
+    ["m11", "m12", "m21", "m22"].forEach(id => {
+        d3.select("#" + id).on("input", updateEigenVectors);
+    });
+    
+    // 初始化
+    updateEigenVectors();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -2019,7 +2331,9 @@ window.LinearAlgebraViz = {
     createVectorSpaceOperationsViz,
     createSubspaceViz,
     createInnerProductViz,
-    createOrthogonalityViz
+    createOrthogonalityViz,
+    createLinearTransformViz,
+    createEigenViz
 };
 
 // 辅助函数：计算叉积
