@@ -1,0 +1,109 @@
+---
+layout: default
+---
+
+<div class="book-chapter">
+    <div class="chapter-header">
+        <h1>{{ page.title }}</h1>
+        {% if page.chapter_number %}
+        <div class="chapter-number">第 {{ page.chapter_number }} 章</div>
+        {% endif %}
+    </div>
+
+    <div class="chapter-content">
+        {{ content }}
+    </div>
+
+    {% if page.comments != false %}
+    <div class="chapter-comments">
+        <h2>读者讨论</h2>
+        {% include comments.html %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.book-chapter {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.chapter-header {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.chapter-number {
+    color: #666;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+.chapter-content {
+    font-size: 1.1em;
+    line-height: 1.8;
+}
+
+.chapter-content h2 {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: #155799;
+}
+
+.chapter-content p {
+    margin-bottom: 20px;
+}
+
+.chapter-content ul, .chapter-content ol {
+    margin-bottom: 20px;
+    padding-left: 25px;
+}
+
+.chapter-content li {
+    margin-bottom: 10px;
+}
+
+.chapter-content code {
+    background: #f8f8f8;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.chapter-content pre {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+.chapter-comments {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 2px solid #eee;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .chapter-number {
+        color: #999;
+    }
+    
+    .chapter-content h2 {
+        color: #58a6ff;
+    }
+    
+    .chapter-content code {
+        background: #2a2a2a;
+    }
+    
+    .chapter-content pre {
+        background: #2a2a2a;
+    }
+    
+    .chapter-comments {
+        border-top-color: #2a2a2a;
+    }
+}
+</style>

@@ -41,6 +41,8 @@ nav:
     url: /docs
   - title: Blog
     url: /blog
+  - title: Books
+    url: /books
   - title: Examples
     url: /examples
   - title: GitHub
