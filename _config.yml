@@ -7,6 +7,13 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
+# Blog settings
+permalink: /blog/:year/:month/:day/:title/
+collections:
+  posts:
+    output: true
+    permalink: /blog/:year/:month/:day/:title/
+
 # SEO settings
 tagline: Smart Command-Line Assistant for VS Code
 keywords: vscode extension, terminal, command line, AI assistant, productivity tool
