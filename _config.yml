@@ -6,18 +6,6 @@ google_analytics:
 plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
-  - jekyll-algolia
-
-# Algolia search
-algolia:
-  application_id: # 从 Algolia 仪表板获取
-  index_name: shellsage
-  search_only_api_key: # 从 Algolia 仪表板获取
-  admin_api_key: # 从 Algolia 仪表板获取
-  nodes_to_index: 'p,h1,h2,h3,h4,h5,h6,code'
-  files_to_exclude:
-    - index.md
-    - 404.html
 
 # Site settings
 author:
