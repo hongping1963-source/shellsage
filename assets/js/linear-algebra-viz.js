@@ -1048,6 +1048,200 @@ function createEigenDecompViz(container) {
     updateDecomposition();
 }
 
+// SVD可视化
+function createSVDViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制SVD分解步骤
+    function drawSVDSteps(matrix) {
+        // 清除旧的绘制
+        g.selectAll(".svd").remove();
+        
+        // 计算SVD
+        const {U, S, V} = computeSVD(matrix);
+        
+        // 绘制原始变换
+        drawTransformedGrid(g, matrix);
+        
+        // 绘制左奇异向量
+        U.forEach((v, i) => {
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v[0] * scale, y: -v[1] * scale}, 
+                "blue", `u${i+1}`).attr("class", "svd");
+        });
+        
+        // 绘制右奇异向量
+        V.forEach((v, i) => {
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v[0] * scale, y: -v[1] * scale}, 
+                "red", `v${i+1}`).attr("class", "svd");
+        });
+        
+        // 添加奇异值标签
+        g.append("text")
+            .attr("class", "svd")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text(`σ₁ = ${S[0].toFixed(2)}, σ₂ = ${S[1].toFixed(2)}`)
+            .style("font-size", "14px");
+    }
+    
+    // 计算2x2矩阵的SVD
+    function computeSVD(A) {
+        // 计算AᵀA和AAᵀ
+        const ATA = [
+            [A[0][0]*A[0][0] + A[1][0]*A[1][0], A[0][0]*A[0][1] + A[1][0]*A[1][1]],
+            [A[0][1]*A[0][0] + A[1][1]*A[1][0], A[0][1]*A[0][1] + A[1][1]*A[1][1]]
+        ];
+        
+        const AAT = [
+            [A[0][0]*A[0][0] + A[0][1]*A[0][1], A[0][0]*A[1][0] + A[0][1]*A[1][1]],
+            [A[1][0]*A[0][0] + A[1][1]*A[0][1], A[1][0]*A[1][0] + A[1][1]*A[1][1]]
+        ];
+        
+        // 计算特征值和特征向量
+        const {eigenvals: S_squared, eigenvecs: V} = computeEigen(ATA);
+        const {eigenvecs: U} = computeEigen(AAT);
+        
+        // 计算奇异值
+        const S = S_squared.map(Math.sqrt);
+        
+        return {U, S, V};
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "svd-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>矩阵 A:</label><br>
+                <input type="number" id="svd11" value="2" step="0.1" style="width:60px">
+                <input type="number" id="svd12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="svd21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="svd22" value="2" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateSVD() {
+        const matrix = [
+            [parseFloat(d3.select("#svd11").property("value")),
+             parseFloat(d3.select("#svd12").property("value"))],
+            [parseFloat(d3.select("#svd21").property("value")),
+             parseFloat(d3.select("#svd22").property("value"))]
+        ];
+        
+        drawSVDSteps(matrix);
+    }
+    
+    // 添加事件监听器
+    ["svd11", "svd12", "svd21", "svd22"].forEach(id => {
+        d3.select("#" + id).on("input", updateSVD);
+    });
+    
+    // 初始化
+    updateSVD();
+}
+
+// SVD应用可视化
+function createSVDApplicationViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制低秩近似
+    function drawLowRankApproximation(matrix, rank) {
+        // 清除旧的绘制
+        g.selectAll(".svd-approx").remove();
+        
+        // 计算SVD
+        const {U, S, V} = computeSVD(matrix);
+        
+        // 构造近似矩阵
+        const approx = [
+            [0, 0],
+            [0, 0]
+        ];
+        
+        // 只使用前rank个奇异值
+        for (let i = 0; i < rank; i++) {
+            for (let j = 0; j < 2; j++) {
+                for (let k = 0; k < 2; k++) {
+                    approx[j][k] += S[i] * U[j][i] * V[k][i];
+                }
+            }
+        }
+        
+        // 绘制原始变换和近似变换
+        drawTransformedGrid(g, matrix, "blue", 0.3);
+        drawTransformedGrid(g, approx, "red", 0.7);
+        
+        // 添加误差信息
+        const error = Math.sqrt(
+            (matrix[0][0] - approx[0][0])**2 +
+            (matrix[0][1] - approx[0][1])**2 +
+            (matrix[1][0] - approx[1][0])**2 +
+            (matrix[1][1] - approx[1][1])**2
+        );
+        
+        g.append("text")
+            .attr("class", "svd-approx")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text(`Frobenius误差: ${error.toFixed(3)}`)
+            .style("font-size", "14px");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "svd-app-controls");
+    
+    // 矩阵输入和秩选择
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>矩阵 A:</label><br>
+                <input type="number" id="app11" value="2" step="0.1" style="width:60px">
+                <input type="number" id="app12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="app21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="app22" value="2" step="0.1" style="width:60px">
+            </div>
+            <div class="rank-select">
+                <label>近似秩:</label>
+                <select id="rank">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </select>
+            </div>
+        `);
+    
+    // 更新函数
+    function updateApproximation() {
+        const matrix = [
+            [parseFloat(d3.select("#app11").property("value")),
+             parseFloat(d3.select("#app12").property("value"))],
+            [parseFloat(d3.select("#app21").property("value")),
+             parseFloat(d3.select("#app22").property("value"))]
+        ];
+        
+        const rank = parseInt(d3.select("#rank").property("value"));
+        drawLowRankApproximation(matrix, rank);
+    }
+    
+    // 添加事件监听器
+    ["app11", "app12", "app21", "app22", "rank"].forEach(id => {
+        d3.select("#" + id).on("input", updateApproximation);
+    });
+    
+    // 初始化
+    updateApproximation();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -1061,7 +1255,9 @@ window.LinearAlgebraViz = {
     createOrthogonalityViz,
     createGramSchmidtViz,
     createEigenViz,
-    createEigenDecompViz
+    createEigenDecompViz,
+    createSVDViz,
+    createSVDApplicationViz
 };
 
 // 辅助函数：计算叉积
