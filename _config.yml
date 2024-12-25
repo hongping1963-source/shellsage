@@ -25,9 +25,9 @@ comments:
   provider: giscus
   giscus:
     repo: hongping1963-source/shellsage
-    repo-id: R_kgDOK_zfEA
+    repo-id: R_kgDONhk6XA
     category: General
-    category-id: DIC_kwDOK_zfEM4CcLFJ
+    category-id: DIC_kwDONhk6XM4ClgRw
     mapping: pathname
     reactions-enabled: 1
     theme: preferred_color_scheme
