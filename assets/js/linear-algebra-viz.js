@@ -588,22 +588,20 @@ function createSubspaceViz(container) {
         g.selectAll(".subspace").remove();
         
         if (vectors.length === 1) {
-            // 一维子空间（直线）
+            // 一维子空间：直线
             const v = vectors[0];
-            const len = Math.sqrt(v[0]*v[0] + v[1]*v[1]);
-            const normalized = [v[0]/len, v[1]/len];
-            
+            const t = 5;  // 延伸倍数
             g.append("line")
                 .attr("class", "subspace")
-                .attr("x1", -normalized[0] * 200)
-                .attr("y1", normalized[1] * 200)
-                .attr("x2", normalized[0] * 200)
-                .attr("y2", -normalized[1] * 200)
-                .attr("stroke", "#ddd")
+                .attr("x1", -v.x * scale * t)
+                .attr("y1", v.y * scale * t)
+                .attr("x2", v.x * scale * t)
+                .attr("y2", -v.y * scale * t)
+                .attr("stroke", "#999")
                 .attr("stroke-width", 1)
-                .style("stroke-dasharray", "5,5");
+                .attr("stroke-dasharray", "5,5");
         } else if (vectors.length === 2) {
-            // 二维子空间（平面）
+            // 二维子空间：平面
             drawPlane([0, 0, 1]);
         }
         
@@ -620,7 +618,7 @@ function createSubspaceViz(container) {
     controls.append("div")
         .html(`
             <div class="vector-input">
-                <label>向量:</label><br>
+                <label>基向量:</label><br>
                 <input type="number" id="vx" value="1" step="0.1" style="width:60px">
                 <input type="number" id="vy" value="1" step="0.1" style="width:60px">
             </div>
@@ -2310,6 +2308,578 @@ function createEigenViz(container) {
     updateEigenVectors();
 }
 
+// LU分解可视化
+function createLUDecompViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制矩阵分解步骤
+    function drawLUDecomp(matrix) {
+        // 清除旧的绘制
+        g.selectAll(".lu-decomp").remove();
+        
+        // 计算LU分解
+        const {L, U} = luDecomposition(matrix);
+        
+        // 显示原始矩阵
+        g.append("text")
+            .attr("class", "lu-decomp")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text("原始矩阵 A:")
+            .style("font-size", "14px");
+        
+        matrix.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "lu-decomp")
+                .attr("x", -150)
+                .attr("y", -130 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+        
+        // 显示L矩阵
+        g.append("text")
+            .attr("class", "lu-decomp")
+            .attr("x", -150)
+            .attr("y", -70)
+            .text("下三角矩阵 L:")
+            .style("font-size", "14px");
+        
+        L.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "lu-decomp")
+                .attr("x", -150)
+                .attr("y", -50 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+        
+        // 显示U矩阵
+        g.append("text")
+            .attr("class", "lu-decomp")
+            .attr("x", -150)
+            .attr("y", 10)
+            .text("上三角矩阵 U:")
+            .style("font-size", "14px");
+        
+        U.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "lu-decomp")
+                .attr("x", -150)
+                .attr("y", 30 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+    }
+    
+    // LU分解计算
+    function luDecomposition(A) {
+        const n = A.length;
+        const L = Array(n).fill().map(() => Array(n).fill(0));
+        const U = Array(n).fill().map((_, i) => [...A[i]]);
+        
+        // 初始化L的对角线为1
+        for (let i = 0; i < n; i++) {
+            L[i][i] = 1;
+        }
+        
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const factor = U[j][i] / U[i][i];
+                L[j][i] = factor;
+                
+                for (let k = i; k < n; k++) {
+                    U[j][k] -= factor * U[i][k];
+                }
+            }
+        }
+        
+        return {L, U};
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "lu-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>输入矩阵:</label><br>
+                <input type="number" id="a11" value="2" step="0.1" style="width:60px">
+                <input type="number" id="a12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="a21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="a22" value="3" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateLUDecomp() {
+        const matrix = [
+            [parseFloat(d3.select("#a11").property("value")),
+             parseFloat(d3.select("#a12").property("value"))],
+            [parseFloat(d3.select("#a21").property("value")),
+             parseFloat(d3.select("#a22").property("value"))]
+        ];
+        
+        drawLUDecomp(matrix);
+    }
+    
+    // 添加事件监听器
+    ["a11", "a12", "a21", "a22"].forEach(id => {
+        d3.select("#" + id).on("input", updateLUDecomp);
+    });
+    
+    // 初始化
+    updateLUDecomp();
+}
+
+// QR分解可视化
+function createQRDecompViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制QR分解
+    function drawQRDecomp(matrix) {
+        // 清除旧的绘制
+        g.selectAll(".qr-decomp").remove();
+        
+        // 计算QR分解
+        const {Q, R} = qrDecomposition(matrix);
+        
+        // 显示原始矩阵
+        g.append("text")
+            .attr("class", "qr-decomp")
+            .attr("x", -150)
+            .attr("y", -150)
+            .text("原始矩阵 A:")
+            .style("font-size", "14px");
+        
+        matrix.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "qr-decomp")
+                .attr("x", -150)
+                .attr("y", -130 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+        
+        // 显示Q矩阵
+        g.append("text")
+            .attr("class", "qr-decomp")
+            .attr("x", -150)
+            .attr("y", -70)
+            .text("正交矩阵 Q:")
+            .style("font-size", "14px");
+        
+        Q.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "qr-decomp")
+                .attr("x", -150)
+                .attr("y", -50 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+        
+        // 显示R矩阵
+        g.append("text")
+            .attr("class", "qr-decomp")
+            .attr("x", -150)
+            .attr("y", 10)
+            .text("上三角矩阵 R:")
+            .style("font-size", "14px");
+        
+        R.forEach((row, i) => {
+            g.append("text")
+                .attr("class", "qr-decomp")
+                .attr("x", -150)
+                .attr("y", 30 + i*20)
+                .text(`[${row.map(x => x.toFixed(2)).join(", ")}]`)
+                .style("font-size", "12px");
+        });
+        
+        // 绘制向量
+        const v1 = [matrix[0][0], matrix[1][0]];
+        const v2 = [matrix[0][1], matrix[1][1]];
+        const q1 = [Q[0][0], Q[1][0]];
+        const q2 = [Q[0][1], Q[1][1]];
+        
+        // 原始向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v1[0] * scale, y: -v1[1] * scale}, 
+            "blue", "v₁").attr("class", "qr-decomp");
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v2[0] * scale, y: -v2[1] * scale}, 
+            "red", "v₂").attr("class", "qr-decomp");
+        
+        // 正交化后的向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: q1[0] * scale, y: -q1[1] * scale}, 
+            "green", "q₁").attr("class", "qr-decomp")
+            .style("stroke-dasharray", "5,5");
+        drawVector(g, {x: 0, y: 0}, 
+            {x: q2[0] * scale, y: -q2[1] * scale}, 
+            "purple", "q₂").attr("class", "qr-decomp")
+            .style("stroke-dasharray", "5,5");
+    }
+    
+    // QR分解计算
+    function qrDecomposition(A) {
+        const m = A.length;
+        const n = A[0].length;
+        const Q = Array(m).fill().map(() => Array(n).fill(0));
+        const R = Array(n).fill().map(() => Array(n).fill(0));
+        
+        // Gram-Schmidt过程
+        for (let j = 0; j < n; j++) {
+            // 获取当前列向量
+            let v = A.map(row => row[j]);
+            
+            for (let i = 0; i < j; i++) {
+                // 计算投影
+                const qi = Q.map(row => row[i]);
+                const dot = v.reduce((sum, val, k) => sum + val * qi[k], 0);
+                R[i][j] = dot;
+                
+                // 减去投影
+                v = v.map((val, k) => val - dot * qi[k]);
+            }
+            
+            // 计算范数
+            const norm = Math.sqrt(v.reduce((sum, val) => sum + val * val, 0));
+            R[j][j] = norm;
+            
+            // 归一化
+            if (norm > 0) {
+                Q.forEach((row, i) => {
+                    row[j] = v[i] / norm;
+                });
+            }
+        }
+        
+        return {Q, R};
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "qr-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>输入矩阵:</label><br>
+                <input type="number" id="q11" value="1" step="0.1" style="width:60px">
+                <input type="number" id="q12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="q21" value="0" step="0.1" style="width:60px">
+                <input type="number" id="q22" value="1" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateQRDecomp() {
+        const matrix = [
+            [parseFloat(d3.select("#q11").property("value")),
+             parseFloat(d3.select("#q12").property("value"))],
+            [parseFloat(d3.select("#q21").property("value")),
+             parseFloat(d3.select("#q22").property("value"))]
+        ];
+        
+        drawQRDecomp(matrix);
+    }
+    
+    // 添加事件监听器
+    ["q11", "q12", "q21", "q22"].forEach(id => {
+        d3.select("#" + id).on("input", updateQRDecomp);
+    });
+    
+    // 初始化
+    updateQRDecomp();
+}
+
+// 向量场可视化
+function createVectorFieldViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    function drawVectorField(fieldFunction) {
+        // 清除旧的绘制
+        g.selectAll(".vector-field").remove();
+        
+        // 创建网格点
+        const gridSize = 10;
+        const step = 1;
+        
+        for (let x = -gridSize; x <= gridSize; x += step) {
+            for (let y = -gridSize; y <= gridSize; y += step) {
+                const [dx, dy] = fieldFunction(x, y);
+                const magnitude = Math.sqrt(dx*dx + dy*dy);
+                
+                if (magnitude > 0) {
+                    // 归一化向量长度
+                    const normalizedLength = 0.5 * step;
+                    const scaledDx = (dx / magnitude) * normalizedLength;
+                    const scaledDy = (dy / magnitude) * normalizedLength;
+                    
+                    // 绘制向量箭头
+                    drawVector(g, 
+                        {x: x * scale, y: -y * scale},
+                        {x: scaledDx * scale, y: -scaledDy * scale},
+                        "blue", "")
+                        .attr("class", "vector-field")
+                        .style("opacity", 0.5);
+                }
+            }
+        }
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "vector-field-controls");
+    
+    // 预设向量场
+    const presets = {
+        "旋转场": (x, y) => [-y, x],
+        "径向场": (x, y) => [x, y],
+        "鞍点场": (x, y) => [x, -y]
+    };
+    
+    // 添加预设选择器
+    controls.append("select")
+        .attr("id", "field-preset")
+        .on("change", function() {
+            const selectedField = presets[this.value];
+            drawVectorField(selectedField);
+        })
+        .selectAll("option")
+        .data(Object.keys(presets))
+        .enter()
+        .append("option")
+        .text(d => d);
+    
+    // 初始化
+    drawVectorField(presets["旋转场"]);
+}
+
+// 曲线积分可视化
+function createLineIntegralViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    function drawCurve(t) {
+        // 参数方程：圆
+        const x = Math.cos(t);
+        const y = Math.sin(t);
+        return [x, y];
+    }
+    
+    function drawVectorField(x, y) {
+        // 向量场：旋转场
+        return [-y, x];
+    }
+    
+    function drawPathAndField() {
+        // 清除旧的绘制
+        g.selectAll(".line-integral").remove();
+        
+        // 绘制路径
+        const path = d3.path();
+        const steps = 100;
+        for (let i = 0; i <= steps; i++) {
+            const t = (2 * Math.PI * i) / steps;
+            const [x, y] = drawCurve(t);
+            if (i === 0) {
+                path.moveTo(x * scale, -y * scale);
+            } else {
+                path.lineTo(x * scale, -y * scale);
+            }
+        }
+        
+        g.append("path")
+            .attr("d", path)
+            .attr("class", "line-integral")
+            .style("fill", "none")
+            .style("stroke", "red")
+            .style("stroke-width", 2);
+        
+        // 在路径上绘制向量场
+        for (let i = 0; i < steps; i++) {
+            const t = (2 * Math.PI * i) / steps;
+            const [x, y] = drawCurve(t);
+            const [dx, dy] = drawVectorField(x, y);
+            
+            drawVector(g,
+                {x: x * scale, y: -y * scale},
+                {x: dx * scale * 0.2, y: -dy * scale * 0.2},
+                "blue", "")
+                .attr("class", "line-integral")
+                .style("opacity", 0.5);
+        }
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "line-integral-controls");
+    
+    // 添加说明
+    controls.append("div")
+        .html("曲线积分示例：计算旋转场沿单位圆的积分");
+    
+    // 初始化
+    drawPathAndField();
+}
+
+// 散度可视化
+function createDivergenceViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    function drawDivergenceField(x, y) {
+        // 示例：源场
+        return [x, y];
+    }
+    
+    function drawVisualization() {
+        // 清除旧的绘制
+        g.selectAll(".divergence").remove();
+        
+        // 绘制向量场
+        const gridSize = 8;
+        const step = 1;
+        
+        for (let x = -gridSize; x <= gridSize; x += step) {
+            for (let y = -gridSize; y <= gridSize; y += step) {
+                const [dx, dy] = drawDivergenceField(x, y);
+                const magnitude = Math.sqrt(dx*dx + dy*dy);
+                
+                if (magnitude > 0) {
+                    const normalizedLength = 0.5 * step;
+                    const scaledDx = (dx / magnitude) * normalizedLength;
+                    const scaledDy = (dy / magnitude) * normalizedLength;
+                    
+                    drawVector(g,
+                        {x: x * scale, y: -y * scale},
+                        {x: scaledDx * scale, y: -scaledDy * scale},
+                        "blue", "")
+                        .attr("class", "divergence")
+                        .style("opacity", 0.5);
+                }
+            }
+        }
+        
+        // 添加色彩映射表示散度
+        const divergenceColors = d3.scaleLinear()
+            .domain([-1, 0, 1])
+            .range(["blue", "white", "red"]);
+        
+        for (let x = -gridSize; x <= gridSize; x += step) {
+            for (let y = -gridSize; y <= gridSize; y += step) {
+                const divergence = 2; // div F = ∂fx/∂x + ∂fy/∂y = 2
+                const color = divergenceColors(divergence/4);
+                
+                g.append("rect")
+                    .attr("class", "divergence")
+                    .attr("x", (x - step/2) * scale)
+                    .attr("y", (-y - step/2) * scale)
+                    .attr("width", step * scale)
+                    .attr("height", step * scale)
+                    .style("fill", color)
+                    .style("opacity", 0.2);
+            }
+        }
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "divergence-controls");
+    
+    // 添加说明
+    controls.append("div")
+        .html("散度可视化：颜色表示散度大小，箭头表示向量场");
+    
+    // 初始化
+    drawVisualization();
+}
+
+// 旋度可视化
+function createCurlViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    function drawCurlField(x, y) {
+        // 示例：旋转场
+        return [-y, x];
+    }
+    
+    function drawVisualization() {
+        // 清除旧的绘制
+        g.selectAll(".curl").remove();
+        
+        // 绘制向量场
+        const gridSize = 8;
+        const step = 1;
+        
+        for (let x = -gridSize; x <= gridSize; x += step) {
+            for (let y = -gridSize; y <= gridSize; y += step) {
+                const [dx, dy] = drawCurlField(x, y);
+                const magnitude = Math.sqrt(dx*dx + dy*dy);
+                
+                if (magnitude > 0) {
+                    const normalizedLength = 0.5 * step;
+                    const scaledDx = (dx / magnitude) * normalizedLength;
+                    const scaledDy = (dy / magnitude) * normalizedLength;
+                    
+                    drawVector(g,
+                        {x: x * scale, y: -y * scale},
+                        {x: scaledDx * scale, y: -scaledDy * scale},
+                        "blue", "")
+                        .attr("class", "curl")
+                        .style("opacity", 0.5);
+                }
+            }
+        }
+        
+        // 添加色彩映射表示旋度
+        const curlColors = d3.scaleLinear()
+            .domain([-2, 0, 2])
+            .range(["blue", "white", "red"]);
+        
+        for (let x = -gridSize; x <= gridSize; x += step) {
+            for (let y = -gridSize; y <= gridSize; y += step) {
+                const curl = 2; // curl F = ∂fy/∂x - ∂fx/∂y = 2
+                const color = curlColors(curl/2);
+                
+                g.append("rect")
+                    .attr("class", "curl")
+                    .attr("x", (x - step/2) * scale)
+                    .attr("y", (-y - step/2) * scale)
+                    .attr("width", step * scale)
+                    .attr("height", step * scale)
+                    .style("fill", color)
+                    .style("opacity", 0.2);
+            }
+        }
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "curl-controls");
+    
+    // 添加说明
+    controls.append("div")
+        .html("旋度可视化：颜色表示旋度大小，箭头表示向量场");
+    
+    // 初始化
+    drawVisualization();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -2333,7 +2903,13 @@ window.LinearAlgebraViz = {
     createInnerProductViz,
     createOrthogonalityViz,
     createLinearTransformViz,
-    createEigenViz
+    createEigenViz,
+    createLUDecompViz,
+    createQRDecompViz,
+    createVectorFieldViz,
+    createLineIntegralViz,
+    createDivergenceViz,
+    createCurlViz
 };
 
 // 辅助函数：计算叉积
