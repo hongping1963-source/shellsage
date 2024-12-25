@@ -662,13 +662,196 @@ function createSubspaceViz(container) {
     updateSubspace();
 }
 
-// 辅助函数：计算叉积
-function cross(a, b) {
-    return [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0]
-    ];
+// 正交性和投影可视化
+function createOrthogonalityViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制向量和其投影
+    function drawVectorAndProjection(v1, v2) {
+        // 清除旧的绘制
+        g.selectAll(".vector-projection").remove();
+        
+        // 计算投影
+        const dot = v1[0]*v2[0] + v1[1]*v2[1];
+        const v2_len_sq = v2[0]*v2[0] + v2[1]*v2[1];
+        const proj_scale = dot / v2_len_sq;
+        const proj = [v2[0]*proj_scale, v2[1]*proj_scale];
+        
+        // 计算垂直分量
+        const perp = [v1[0] - proj[0], v1[1] - proj[1]];
+        
+        // 绘制原向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v1[0] * scale, y: -v1[1] * scale}, 
+            "blue", "v").attr("class", "vector-projection");
+        
+        // 绘制投影向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: proj[0] * scale, y: -proj[1] * scale}, 
+            "red", "proj(v)").attr("class", "vector-projection");
+        
+        // 绘制垂直分量
+        drawVector(g, {x: proj[0] * scale, y: -proj[1] * scale}, 
+            {x: v1[0] * scale, y: -v1[1] * scale}, 
+            "green", "v⊥").attr("class", "vector-projection");
+        
+        // 绘制被投影向量
+        drawVector(g, {x: 0, y: 0}, 
+            {x: v2[0] * scale, y: -v2[1] * scale}, 
+            "purple", "u").attr("class", "vector-projection");
+        
+        // 绘制投影线（虚线）
+        g.append("line")
+            .attr("class", "vector-projection")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", v1[0] * scale)
+            .attr("y2", -v1[1] * scale)
+            .attr("stroke", "#999")
+            .attr("stroke-width", 1)
+            .style("stroke-dasharray", "5,5");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "orthogonality-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-input">
+                <label>向量 v:</label><br>
+                <input type="number" id="v1x" value="2" step="0.1" style="width:60px">
+                <input type="number" id="v1y" value="1" step="0.1" style="width:60px">
+            </div>
+            <div class="vector-input">
+                <label>向量 u:</label><br>
+                <input type="number" id="v2x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="v2y" value="0" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateProjection() {
+        const v1 = [
+            parseFloat(d3.select("#v1x").property("value")),
+            parseFloat(d3.select("#v1y").property("value"))
+        ];
+        const v2 = [
+            parseFloat(d3.select("#v2x").property("value")),
+            parseFloat(d3.select("#v2y").property("value"))
+        ];
+        
+        drawVectorAndProjection(v1, v2);
+    }
+    
+    // 添加事件监听器
+    ["v1x", "v1y", "v2x", "v2y"].forEach(id => {
+        d3.select("#" + id).on("input", updateProjection);
+    });
+    
+    // 初始化
+    updateProjection();
+}
+
+// Gram-Schmidt正交化可视化
+function createGramSchmidtViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制向量组
+    function drawVectorSet(vectors, colors) {
+        // 清除旧的绘制
+        g.selectAll(".gram-schmidt").remove();
+        
+        vectors.forEach((v, i) => {
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v[0] * scale, y: -v[1] * scale}, 
+                colors[i], `v${i+1}`).attr("class", "gram-schmidt");
+        });
+    }
+    
+    // Gram-Schmidt正交化
+    function gramSchmidt(vectors) {
+        const orthogonal = [];
+        
+        vectors.forEach((v, i) => {
+            let u = [...v];
+            // 减去在之前向量上的投影
+            for (let j = 0; j < i; j++) {
+                const prev = orthogonal[j];
+                const dot = u[0]*prev[0] + u[1]*prev[1];
+                const prev_len_sq = prev[0]*prev[0] + prev[1]*prev[1];
+                const proj_scale = dot / prev_len_sq;
+                u[0] -= prev[0] * proj_scale;
+                u[1] -= prev[1] * proj_scale;
+            }
+            orthogonal.push(u);
+        });
+        
+        return orthogonal;
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "gram-schmidt-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-set">
+                <label>向量组:</label><br>
+                <div class="vector-input">
+                    <label>v₁:</label>
+                    <input type="number" id="v1x" value="1" step="0.1" style="width:60px">
+                    <input type="number" id="v1y" value="1" step="0.1" style="width:60px">
+                </div>
+                <div class="vector-input">
+                    <label>v₂:</label>
+                    <input type="number" id="v2x" value="0" step="0.1" style="width:60px">
+                    <input type="number" id="v2y" value="1" step="0.1" style="width:60px">
+                </div>
+            </div>
+        `);
+    
+    // 添加按钮
+    controls.append("div")
+        .attr("class", "gram-schmidt-buttons")
+        .html(`
+            <button id="show-original">显示原始向量</button>
+            <button id="show-orthogonal">显示正交化结果</button>
+        `);
+    
+    // 更新函数
+    function updateVectors(orthogonalize = false) {
+        const vectors = [
+            [parseFloat(d3.select("#v1x").property("value")),
+             parseFloat(d3.select("#v1y").property("value"))]
+            [parseFloat(d3.select("#v2x").property("value")),
+             parseFloat(d3.select("#v2y").property("value"))]
+        ];
+        
+        if (orthogonalize) {
+            const orthogonal = gramSchmidt(vectors);
+            drawVectorSet(orthogonal, ["red", "blue"]);
+        } else {
+            drawVectorSet(vectors, ["purple", "orange"]);
+        }
+    }
+    
+    // 添加事件监听器
+    ["v1x", "v1y", "v2x", "v2y"].forEach(id => {
+        d3.select("#" + id).on("input", () => updateVectors(false));
+    });
+    
+    d3.select("#show-original").on("click", () => updateVectors(false));
+    d3.select("#show-orthogonal").on("click", () => updateVectors(true));
+    
+    // 初始化
+    updateVectors(false);
 }
 
 // 导出函数
@@ -680,5 +863,16 @@ window.LinearAlgebraViz = {
     createMatrixTransformation,
     createEigenDemo,
     createVectorSpaceViz,
-    createSubspaceViz
+    createSubspaceViz,
+    createOrthogonalityViz,
+    createGramSchmidtViz
 };
+
+// 辅助函数：计算叉积
+function cross(a, b) {
+    return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    ];
+}
