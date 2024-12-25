@@ -18,53 +18,7 @@ chapter_number: 1
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 创建一个简单的向量可视化
-    const svg = d3.select('#vector-visualization')
-        .append('svg')
-        .attr('width', 400)
-        .attr('height', 400);
-    
-    // 添加坐标轴
-    const g = svg.append('g')
-        .attr('transform', 'translate(200, 200)');
-    
-    // X轴
-    g.append('line')
-        .attr('x1', -180)
-        .attr('y1', 0)
-        .attr('x2', 180)
-        .attr('y2', 0)
-        .attr('stroke', 'black');
-    
-    // Y轴
-    g.append('line')
-        .attr('x1', 0)
-        .attr('y1', -180)
-        .attr('x2', 0)
-        .attr('y2', 180)
-        .attr('stroke', 'black');
-    
-    // 绘制向量
-    const vector = g.append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', 100)
-        .attr('y2', -50)
-        .attr('stroke', 'red')
-        .attr('marker-end', 'url(#arrow)');
-    
-    // 添加箭头标记
-    svg.append('defs').append('marker')
-        .attr('id', 'arrow')
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 8)
-        .attr('refY', 0)
-        .attr('markerWidth', 6)
-        .attr('markerHeight', 6)
-        .attr('orient', 'auto')
-        .append('path')
-        .attr('d', 'M0,-5L10,0L0,5')
-        .attr('fill', 'red');
+    LinearAlgebraViz.createVectorVisualization('#vector-visualization');
 });
 </script>
 
@@ -84,6 +38,17 @@ document.addEventListener('DOMContentLoaded', function() {
 2. **大小**：向量的长度或模
 3. **可平移性**：起点的位置不影响向量
 
+<div class="visualization-container">
+    <div class="visualization-title">向量旋转演示</div>
+    <div id="vector-rotation"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    LinearAlgebraViz.createVectorRotation('#vector-rotation');
+});
+</script>
+
 ## 1.2 向量运算
 
 ### 1.2.1 向量加法
@@ -99,42 +64,10 @@ $\vec{a} + \vec{b} = \vec{c}$
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 向量加法可视化
-    const svg = d3.select('#vector-addition')
-        .append('svg')
-        .attr('width', 400)
-        .attr('height', 400);
-    
-    const g = svg.append('g')
-        .attr('transform', 'translate(100, 300)');
-    
-    // 绘制第一个向量
-    g.append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', 100)
-        .attr('y2', -50)
-        .attr('stroke', 'blue')
-        .attr('marker-end', 'url(#arrow-blue)');
-    
-    // 绘制第二个向量
-    g.append('line')
-        .attr('x1', 100)
-        .attr('y1', -50)
-        .attr('x2', 150)
-        .attr('y2', -150)
-        .attr('stroke', 'green')
-        .attr('marker-end', 'url(#arrow-green)');
-    
-    // 绘制和向量
-    g.append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', 150)
-        .attr('y2', -150)
-        .attr('stroke', 'red')
-        .attr('stroke-dasharray', '5,5')
-        .attr('marker-end', 'url(#arrow-red)');
+    LinearAlgebraViz.createVectorAddition('#vector-addition', 
+        {x: 2, y: 1},   // 第一个向量
+        {x: -1, y: 2}   // 第二个向量
+    );
 });
 </script>
 
@@ -164,38 +97,7 @@ $c_1\vec{v}_1 + c_2\vec{v}_2 + ... + c_k\vec{v}_k$
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 线性组合的动态可视化
-    const svg = d3.select('#linear-combination')
-        .append('svg')
-        .attr('width', 400)
-        .attr('height', 400);
-    
-    const g = svg.append('g')
-        .attr('transform', 'translate(200, 200)');
-    
-    // 基向量
-    const v1 = {x: 100, y: 0};
-    const v2 = {x: 0, y: -100};
-    
-    // 绘制基向量
-    g.append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', v1.x)
-        .attr('y2', v1.y)
-        .attr('stroke', 'blue')
-        .attr('marker-end', 'url(#arrow-blue)');
-    
-    g.append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', v2.x)
-        .attr('y2', v2.y)
-        .attr('stroke', 'green')
-        .attr('marker-end', 'url(#arrow-green)');
-    
-    // 添加滑块控制系数
-    // 这部分将在后续的交互式功能中实现
+    LinearAlgebraViz.createLinearCombination('#linear-combination');
 });
 </script>
 
@@ -291,6 +193,32 @@ print(f"合力大小: {magnitude}")
 1. [线性代数及其应用](https://book.douban.com/subject/1425950/)
 2. [3Blue1Brown 线性代数系列](https://www.3blue1brown.com/topics/linear-algebra)
 3. [MIT 线性代数公开课](https://ocw.mit.edu/courses/mathematics/18-06-linear-algebra-spring-2010/)
+
+<style>
+.vector-controls {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.vector-controls label {
+    display: inline-block;
+    width: 100px;
+}
+
+.vector-controls input[type="range"] {
+    width: 200px;
+    margin-left: 10px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .vector-controls {
+        background: #2a2a2a;
+    }
+}
+</style>
 
 ---
 
