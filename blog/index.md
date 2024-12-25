@@ -1,6 +1,6 @@
 ---
 layout: default
-title: ShellSage Blog
+title: Blog
 ---
 
 # ShellSage Blog
@@ -9,19 +9,13 @@ Welcome to the ShellSage blog! Here you'll find articles about command-line prod
 
 ## Latest Posts
 
-### [Introducing ShellSage: Your Intelligent Command-Line Assistant](/blog/introducing-shellsage)
-*December 25, 2024*
-
-Learn about ShellSage, a powerful VS Code extension that brings intelligence to your terminal experience...
-
-[Read more](/blog/introducing-shellsage)
-
-### [ShellSage Power User Guide: Advanced Tips and Tricks](/blog/power-user-guide)
-*December 25, 2024*
-
-Discover advanced features and techniques that will transform you into a ShellSage power user...
-
-[Read more](/blog/power-user-guide)
+{% for post in site.posts %}
+  <article class="post-preview">
+    <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
+    <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %d, %Y" }}</time>
+    {{ post.excerpt }}
+  </article>
+{% endfor %}
 
 ## Categories
 
