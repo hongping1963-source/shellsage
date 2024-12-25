@@ -854,6 +854,200 @@ function createGramSchmidtViz(container) {
     updateVectors(false);
 }
 
+// 特征值和特征向量可视化
+function createEigenViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制矩阵变换和特征向量
+    function drawEigenVectors(matrix, eigenvals, eigenvecs) {
+        // 清除旧的绘制
+        g.selectAll(".eigen").remove();
+        
+        // 绘制网格
+        drawGrid(g);
+        
+        // 绘制变换后的网格
+        drawTransformedGrid(g, matrix);
+        
+        // 绘制特征向量及其变换
+        eigenvecs.forEach((v, i) => {
+            const eigenval = eigenvals[i];
+            const transformed = [
+                matrix[0][0]*v[0] + matrix[0][1]*v[1],
+                matrix[1][0]*v[0] + matrix[1][1]*v[1]
+            ];
+            
+            // 原始特征向量
+            drawVector(g, {x: 0, y: 0}, 
+                {x: v[0] * scale, y: -v[1] * scale}, 
+                "blue", `v${i+1}`).attr("class", "eigen");
+            
+            // 变换后的特征向量
+            drawVector(g, {x: 0, y: 0}, 
+                {x: transformed[0] * scale, y: -transformed[1] * scale}, 
+                "red", `λ${i+1}v${i+1}`).attr("class", "eigen");
+            
+            // 添加特征值标签
+            g.append("text")
+                .attr("class", "eigen")
+                .attr("x", v[0] * scale + 10)
+                .attr("y", -v[1] * scale + 10)
+                .text(`λ${i+1} = ${eigenval.toFixed(2)}`)
+                .style("font-size", "12px");
+        });
+    }
+    
+    // 计算2x2矩阵的特征值和特征向量
+    function computeEigen(matrix) {
+        // 计算特征多项式系数
+        const a = 1;
+        const b = -(matrix[0][0] + matrix[1][1]);
+        const c = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
+        
+        // 求解特征值
+        const discriminant = Math.sqrt(b*b - 4*a*c);
+        const eigenvals = [
+            (-b + discriminant)/(2*a),
+            (-b - discriminant)/(2*a)
+        ];
+        
+        // 求解特征向量
+        const eigenvecs = eigenvals.map(lambda => {
+            const temp = matrix[0][1] !== 0 ? 
+                [matrix[0][1], lambda - matrix[0][0]] :
+                [lambda - matrix[1][1], matrix[1][0]];
+            const norm = Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
+            return [temp[0]/norm, temp[1]/norm];
+        });
+        
+        return {eigenvals, eigenvecs};
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "eigen-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>变换矩阵:</label><br>
+                <input type="number" id="m11" value="2" step="0.1" style="width:60px">
+                <input type="number" id="m12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="m21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="m22" value="2" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateEigenVectors() {
+        const matrix = [
+            [parseFloat(d3.select("#m11").property("value")),
+             parseFloat(d3.select("#m12").property("value"))],
+            [parseFloat(d3.select("#m21").property("value")),
+             parseFloat(d3.select("#m22").property("value"))]
+        ];
+        
+        const {eigenvals, eigenvecs} = computeEigen(matrix);
+        drawEigenVectors(matrix, eigenvals, eigenvecs);
+    }
+    
+    // 添加事件监听器
+    ["m11", "m12", "m21", "m22"].forEach(id => {
+        d3.select("#" + id).on("input", updateEigenVectors);
+    });
+    
+    // 初始化
+    updateEigenVectors();
+}
+
+// 特征值分解可视化
+function createEigenDecompViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制矩阵分解
+    function drawEigenDecomposition(matrix) {
+        // 清除旧的绘制
+        g.selectAll(".eigen-decomp").remove();
+        
+        // 计算特征值和特征向量
+        const {eigenvals, eigenvecs} = computeEigen(matrix);
+        
+        // 构造对角矩阵
+        const D = [
+            [eigenvals[0], 0],
+            [0, eigenvals[1]]
+        ];
+        
+        // 构造特征向量矩阵
+        const P = eigenvecs;
+        
+        // 绘制原始变换
+        drawTransformedGrid(g, matrix);
+        
+        // 绘制分解步骤
+        // 1. P: 特征向量基变换
+        // 2. D: 缩放
+        // 3. P^(-1): 逆变换
+        
+        // 添加分解说明
+        g.append("text")
+            .attr("class", "eigen-decomp")
+            .attr("x", -150)
+            .attr("y", -150)
+            .html("A = PDP<sup>-1</sup>")
+            .style("font-size", "16px");
+            
+        // 添加矩阵值
+        g.append("text")
+            .attr("class", "eigen-decomp")
+            .attr("x", -150)
+            .attr("y", -130)
+            .text(`D = diag(${eigenvals[0].toFixed(2)}, ${eigenvals[1].toFixed(2)})`)
+            .style("font-size", "12px");
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "eigen-decomp-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>矩阵 A:</label><br>
+                <input type="number" id="a11" value="2" step="0.1" style="width:60px">
+                <input type="number" id="a12" value="1" step="0.1" style="width:60px"><br>
+                <input type="number" id="a21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="a22" value="2" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateDecomposition() {
+        const matrix = [
+            [parseFloat(d3.select("#a11").property("value")),
+             parseFloat(d3.select("#a12").property("value"))],
+            [parseFloat(d3.select("#a21").property("value")),
+             parseFloat(d3.select("#a22").property("value"))]
+        ];
+        
+        drawEigenDecomposition(matrix);
+    }
+    
+    // 添加事件监听器
+    ["a11", "a12", "a21", "a22"].forEach(id => {
+        d3.select("#" + id).on("input", updateDecomposition);
+    });
+    
+    // 初始化
+    updateDecomposition();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -865,7 +1059,9 @@ window.LinearAlgebraViz = {
     createVectorSpaceViz,
     createSubspaceViz,
     createOrthogonalityViz,
-    createGramSchmidtViz
+    createGramSchmidtViz,
+    createEigenViz,
+    createEigenDecompViz
 };
 
 // 辅助函数：计算叉积
