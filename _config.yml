@@ -20,6 +20,19 @@ author:
   name: Zhang Hongping
   email: zhanghongping1982@gmail.com
 
+# Comments settings
+comments:
+  provider: giscus
+  giscus:
+    repo: hongping1963-source/shellsage
+    repo-id: R_kgDOK_zfEA
+    category: General
+    category-id: DIC_kwDOK_zfEM4CcLFJ
+    mapping: pathname
+    reactions-enabled: 1
+    theme: preferred_color_scheme
+    language: zh-CN
+
 # Navigation
 nav:
   - title: Home
