@@ -426,6 +426,251 @@ function createEigenDemo(container) {
     updateEigenDemo();
 }
 
+// 向量空间可视化
+function createVectorSpaceViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制平面（二维子空间）
+    function drawPlane(normal) {
+        const planeLength = 400;
+        
+        // 计算平面上的两个方向向量
+        let v1, v2;
+        if (Math.abs(normal[2]) < 0.99) {
+            v1 = [-normal[1], normal[0], 0];
+            v2 = cross(normal, v1);
+        } else {
+            v1 = [1, 0, 0];
+            v2 = [0, 1, 0];
+        }
+        
+        // 归一化
+        const len1 = Math.sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2]);
+        const len2 = Math.sqrt(v2[0]*v2[0] + v2[1]*v2[1] + v2[2]*v2[2]);
+        v1 = v1.map(x => x/len1);
+        v2 = v2.map(x => x/len2);
+        
+        // 绘制网格
+        const gridSize = 5;
+        const step = planeLength / gridSize;
+        
+        for (let i = -gridSize; i <= gridSize; i++) {
+            // 平行于v1的线
+            const start1 = [
+                i * step * v1[0],
+                i * step * v1[1]
+            ];
+            const end1 = [
+                i * step * v1[0] + planeLength * v2[0],
+                i * step * v1[1] + planeLength * v2[1]
+            ];
+            
+            g.append("line")
+                .attr("x1", start1[0])
+                .attr("y1", -start1[1])
+                .attr("x2", end1[0])
+                .attr("y2", -end1[1])
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 0.5);
+                
+            // 平行于v2的线
+            const start2 = [
+                i * step * v2[0],
+                i * step * v2[1]
+            ];
+            const end2 = [
+                i * step * v2[0] + planeLength * v1[0],
+                i * step * v2[1] + planeLength * v1[1]
+            ];
+            
+            g.append("line")
+                .attr("x1", start2[0])
+                .attr("y1", -start2[1])
+                .attr("x2", end2[0])
+                .attr("y2", -end2[1])
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 0.5);
+        }
+    }
+    
+    // 绘制基向量
+    function drawBasisVectors(vectors) {
+        vectors.forEach((v, i) => {
+            drawVector(g, 
+                {x: 0, y: 0}, 
+                {x: v[0] * scale, y: v[1] * scale}, 
+                ["red", "blue", "green"][i],
+                `v${i+1}`
+            );
+        });
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "vector-space-controls");
+    
+    // 基向量输入
+    controls.append("div")
+        .html(`
+            <div class="basis-input">
+                <label>基向量 1:</label><br>
+                <input type="number" id="v1x" value="1" step="0.1" style="width:60px">
+                <input type="number" id="v1y" value="0" step="0.1" style="width:60px">
+            </div>
+            <div class="basis-input">
+                <label>基向量 2:</label><br>
+                <input type="number" id="v2x" value="0" step="0.1" style="width:60px">
+                <input type="number" id="v2y" value="1" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 预设按钮
+    controls.append("div")
+        .attr("class", "preset-buttons")
+        .html(`
+            <button onclick="updateBasis([[1,0],[0,1]])">标准基</button>
+            <button onclick="updateBasis([[1,1],[-1,1]])">旋转45°基</button>
+            <button onclick="updateBasis([[2,0],[0,0.5]])">拉伸基</button>
+        `);
+    
+    // 更新函数
+    function updateVectorSpace() {
+        // 清除旧的绘制
+        g.selectAll("line").remove();
+        g.selectAll("path").remove();
+        g.selectAll("text").remove();
+        
+        // 获取基向量
+        const basis = [
+            [parseFloat(d3.select("#v1x").property("value")),
+             parseFloat(d3.select("#v1y").property("value"))],
+            [parseFloat(d3.select("#v2x").property("value")),
+             parseFloat(d3.select("#v2y").property("value"))]
+        ];
+        
+        // 重新绘制
+        drawPlane([0, 0, 1]);  // xy平面
+        drawBasisVectors(basis);
+    }
+    
+    // 添加事件监听器
+    ["v1x", "v1y", "v2x", "v2y"].forEach(id => {
+        d3.select("#" + id).on("input", updateVectorSpace);
+    });
+    
+    // 暴露更新基的函数给全局作用域
+    window.updateBasis = function(basis) {
+        d3.select("#v1x").property("value", basis[0][0]);
+        d3.select("#v1y").property("value", basis[0][1]);
+        d3.select("#v2x").property("value", basis[1][0]);
+        d3.select("#v2y").property("value", basis[1][1]);
+        updateVectorSpace();
+    };
+    
+    // 初始化
+    updateVectorSpace();
+}
+
+// 子空间可视化
+function createSubspaceViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制子空间（直线或平面）
+    function drawSubspace(vectors) {
+        // 清除旧的绘制
+        g.selectAll(".subspace").remove();
+        
+        if (vectors.length === 1) {
+            // 一维子空间（直线）
+            const v = vectors[0];
+            const len = Math.sqrt(v[0]*v[0] + v[1]*v[1]);
+            const normalized = [v[0]/len, v[1]/len];
+            
+            g.append("line")
+                .attr("class", "subspace")
+                .attr("x1", -normalized[0] * 200)
+                .attr("y1", normalized[1] * 200)
+                .attr("x2", normalized[0] * 200)
+                .attr("y2", -normalized[1] * 200)
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 1)
+                .style("stroke-dasharray", "5,5");
+        } else if (vectors.length === 2) {
+            // 二维子空间（平面）
+            drawPlane([0, 0, 1]);
+        }
+        
+        // 绘制基向量
+        drawBasisVectors(vectors);
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "subspace-controls");
+    
+    // 向量输入
+    controls.append("div")
+        .html(`
+            <div class="vector-input">
+                <label>向量:</label><br>
+                <input type="number" id="vx" value="1" step="0.1" style="width:60px">
+                <input type="number" id="vy" value="1" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 维度选择
+    controls.append("div")
+        .html(`
+            <div class="dimension-select">
+                <label>子空间维度:</label><br>
+                <select id="dimension">
+                    <option value="1">1维（直线）</option>
+                    <option value="2">2维（平面）</option>
+                </select>
+            </div>
+        `);
+    
+    // 更新函数
+    function updateSubspace() {
+        const v = [
+            parseFloat(d3.select("#vx").property("value")),
+            parseFloat(d3.select("#vy").property("value"))
+        ];
+        
+        const dim = parseInt(d3.select("#dimension").property("value"));
+        
+        if (dim === 1) {
+            drawSubspace([v]);
+        } else {
+            // 为二维子空间添加一个垂直的向量
+            const perpV = [-v[1], v[0]];
+            drawSubspace([v, perpV]);
+        }
+    }
+    
+    // 添加事件监听器
+    ["vx", "vy"].forEach(id => {
+        d3.select("#" + id).on("input", updateSubspace);
+    });
+    d3.select("#dimension").on("change", updateSubspace);
+    
+    // 初始化
+    updateSubspace();
+}
+
+// 辅助函数：计算叉积
+function cross(a, b) {
+    return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    ];
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -433,5 +678,7 @@ window.LinearAlgebraViz = {
     createLinearCombination,
     createVectorRotation,
     createMatrixTransformation,
-    createEigenDemo
+    createEigenDemo,
+    createVectorSpaceViz,
+    createSubspaceViz
 };
