@@ -28,6 +28,28 @@ description: 精选技术书籍和教程
     </div>
 </div>
 
+## 线性代数的艺术
+
+<div class="book-card">
+    <div class="book-cover">
+        <img src="/assets/images/books/linear-algebra-cover.png" alt="线性代数的艺术">
+    </div>
+    <div class="book-info">
+        <h3>线性代数的艺术</h3>
+        <p class="book-description">
+            这是一本独特的线性代数教程，通过优雅的可视化方式解释复杂的数学概念。本书将抽象的线性代数理论转化为直观的图形表示，帮助读者建立深刻的直觉理解。
+        </p>
+        <div class="book-meta">
+            <span class="book-author">原作者：Kenji Hiranabe</span>
+            <span class="book-date">中文版整理：Zhang Hongping</span>
+        </div>
+        <div class="book-links">
+            <a href="/books/linear-algebra/introduction" class="button">开始阅读</a>
+            <a href="https://github.com/kenjihiranabe/The-Art-of-Linear-Algebra" class="button" target="_blank">原版仓库</a>
+        </div>
+    </div>
+</div>
+
 <style>
 .book-card {
     display: flex;
@@ -72,7 +94,8 @@ description: 精选技术书籍和教程
 
 .book-meta {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 5px;
     color: #666;
     font-size: 0.9em;
     margin-bottom: 15px;
