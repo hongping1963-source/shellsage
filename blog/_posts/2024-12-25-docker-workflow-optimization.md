@@ -4,7 +4,8 @@ title: "Optimizing Docker Workflows with ShellSage"
 date: 2024-12-25
 categories: [tutorials, docker]
 tags: [docker, containers, devops]
-author: ShellSage Team
+author: Zhang Hongping
+author_email: zhanghongping1982@gmail.com
 ---
 
 # Optimizing Docker Workflows with ShellSage

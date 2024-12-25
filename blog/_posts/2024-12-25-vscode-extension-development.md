@@ -4,7 +4,8 @@ title: "VS Code Extension Development Guide"
 date: 2024-12-25
 categories: [tutorials, vscode]
 tags: [vscode, extension-development, typescript, api]
-author: ShellSage Team
+author: Zhang Hongping
+author_email: zhanghongping1982@gmail.com
 ---
 
 # VS Code Extension Development Guide

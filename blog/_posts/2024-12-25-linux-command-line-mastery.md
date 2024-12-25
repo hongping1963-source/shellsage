@@ -4,7 +4,8 @@ title: "Linux Command Line Mastery with ShellSage"
 date: 2024-12-25
 categories: [tutorials, linux]
 tags: [linux, cli, bash, productivity]
-author: ShellSage Team
+author: Zhang Hongping
+author_email: zhanghongping1982@gmail.com
 ---
 
 # Linux Command Line Mastery with ShellSage

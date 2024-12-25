@@ -4,7 +4,8 @@ title: "Efficient NPM Package Management with ShellSage"
 date: 2024-12-25
 categories: [tutorials, npm]
 tags: [npm, nodejs, package-management]
-author: ShellSage Team
+author: Zhang Hongping
+author_email: zhanghongping1982@gmail.com
 ---
 
 # Efficient NPM Package Management with ShellSage

@@ -15,6 +15,11 @@ algolia:
   search_only_api_key: YOUR_SEARCH_ONLY_API_KEY
   nodes_to_index: 'p,h1,h2,h3,h4,h5,h6,code'
 
+# Site settings
+author:
+  name: Zhang Hongping
+  email: zhanghongping1982@gmail.com
+
 # Navigation
 nav:
   - title: Home
