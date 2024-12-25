@@ -163,8 +163,12 @@ function createLinearCombination(container) {
     const v2 = {x: 0, y: 1};
     
     // 绘制基向量
-    drawVector(g, {x: 0, y: 0}, {x: v1.x * scale, y: v1.y * scale}, "blue", "e₁");
-    drawVector(g, {x: 0, y: 0}, {x: v2.x * scale, y: v2.y * scale}, "green", "e₂");
+    drawVector(g, {x: 0, y: 0}, 
+        {x: v1.x * scale, y: v1.y * scale}, 
+        "blue", "e₁");
+    drawVector(g, {x: 0, y: 0}, 
+        {x: v2.x * scale, y: v2.y * scale}, 
+        "green", "e₂");
     
     // 添加滑块控制
     const controls = d3.select(container)
@@ -1242,6 +1246,316 @@ function createSVDApplicationViz(container) {
     updateApproximation();
 }
 
+// 线性方程组可视化
+function createLinearSystemViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制线性方程组的几何表示
+    function drawLinearSystem(equations) {
+        // 清除旧的绘制
+        g.selectAll(".linear-system").remove();
+        
+        // 绘制每个方程的直线
+        equations.forEach((eq, i) => {
+            // ax + by = c
+            const [a, b, c] = eq;
+            
+            // 计算两个点来绘制直线
+            const x1 = -5;
+            const x2 = 5;
+            const y1 = (c - a*x1) / b;
+            const y2 = (c - a*x2) / b;
+            
+            // 绘制直线
+            g.append("line")
+                .attr("class", "linear-system")
+                .attr("x1", x1 * scale)
+                .attr("y1", -y1 * scale)
+                .attr("x2", x2 * scale)
+                .attr("y2", -y2 * scale)
+                .attr("stroke", i === 0 ? "blue" : "red")
+                .attr("stroke-width", 2);
+            
+            // 添加方程标签
+            g.append("text")
+                .attr("class", "linear-system")
+                .attr("x", x2 * scale - 20)
+                .attr("y", -y2 * scale - 10)
+                .text(`${a}x + ${b}y = ${c}`)
+                .style("font-size", "12px")
+                .style("fill", i === 0 ? "blue" : "red");
+        });
+        
+        // 如果有解，绘制解点
+        if (equations.length === 2) {
+            const solution = solveSystem(equations[0], equations[1]);
+            if (solution) {
+                const [x, y] = solution;
+                g.append("circle")
+                    .attr("class", "linear-system")
+                    .attr("cx", x * scale)
+                    .attr("cy", -y * scale)
+                    .attr("r", 4)
+                    .attr("fill", "green");
+                
+                g.append("text")
+                    .attr("class", "linear-system")
+                    .attr("x", x * scale + 5)
+                    .attr("y", -y * scale - 5)
+                    .text(`(${x.toFixed(2)}, ${y.toFixed(2)})`)
+                    .style("font-size", "12px");
+            }
+        }
+    }
+    
+    // 求解2x2线性方程组
+    function solveSystem(eq1, eq2) {
+        const [a1, b1, c1] = eq1;
+        const [a2, b2, c2] = eq2;
+        
+        const det = a1*b2 - a2*b1;
+        if (Math.abs(det) < 1e-10) return null;  // 无解或无穷多解
+        
+        const x = (c1*b2 - c2*b1) / det;
+        const y = (a1*c2 - a2*c1) / det;
+        
+        return [x, y];
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "linear-system-controls");
+    
+    // 方程输入
+    controls.append("div")
+        .html(`
+            <div class="equation-input">
+                <label>方程 1: ax + by = c</label><br>
+                <input type="number" id="a1" value="1" step="0.1" style="width:60px">x +
+                <input type="number" id="b1" value="1" step="0.1" style="width:60px">y =
+                <input type="number" id="c1" value="2" step="0.1" style="width:60px">
+            </div>
+            <div class="equation-input">
+                <label>方程 2: ax + by = c</label><br>
+                <input type="number" id="a2" value="1" step="0.1" style="width:60px">x +
+                <input type="number" id="b2" value="-1" step="0.1" style="width:60px">y =
+                <input type="number" id="c2" value="0" step="0.1" style="width:60px">
+            </div>
+        `);
+    
+    // 更新函数
+    function updateSystem() {
+        const equations = [
+            [parseFloat(d3.select("#a1").property("value")),
+             parseFloat(d3.select("#b1").property("value")),
+             parseFloat(d3.select("#c1").property("value"))],
+            [parseFloat(d3.select("#a2").property("value")),
+             parseFloat(d3.select("#b2").property("value")),
+             parseFloat(d3.select("#c2").property("value"))]
+        ];
+        
+        drawLinearSystem(equations);
+    }
+    
+    // 添加事件监听器
+    ["a1", "b1", "c1", "a2", "b2", "c2"].forEach(id => {
+        d3.select("#" + id).on("input", updateSystem);
+    });
+    
+    // 初始化
+    updateSystem();
+}
+
+// 高斯消元法可视化
+function createGaussianEliminationViz(container) {
+    const g = createVectorVisualization(container);
+    const scale = 40;
+    
+    // 绘制消元过程
+    function drawEliminationStep(matrix, step) {
+        // 清除旧的绘制
+        g.selectAll(".gaussian").remove();
+        
+        // 绘制矩阵
+        const cellWidth = 40;
+        const cellHeight = 30;
+        const startX = -150;
+        const startY = 100;
+        
+        // 绘制矩阵边框
+        g.append("rect")
+            .attr("class", "gaussian")
+            .attr("x", startX)
+            .attr("y", -startY)
+            .attr("width", cellWidth * (matrix[0].length))
+            .attr("height", cellHeight * matrix.length)
+            .attr("fill", "none")
+            .attr("stroke", "#999");
+        
+        // 绘制矩阵元素
+        matrix.forEach((row, i) => {
+            row.forEach((val, j) => {
+                g.append("text")
+                    .attr("class", "gaussian")
+                    .attr("x", startX + j*cellWidth + cellWidth/2)
+                    .attr("y", -startY + i*cellHeight + cellHeight/2)
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle")
+                    .text(val.toFixed(2))
+                    .style("font-size", "12px")
+                    .style("fill", step && step.pivot[0] === i && step.pivot[1] === j ? "red" : "black");
+            });
+        });
+        
+        // 如果有消元步骤，显示操作说明
+        if (step) {
+            g.append("text")
+                .attr("class", "gaussian")
+                .attr("x", startX)
+                .attr("y", -startY - 20)
+                .text(step.description)
+                .style("font-size", "14px");
+        }
+    }
+    
+    // 高斯消元法
+    function gaussianElimination(matrix) {
+        const m = matrix.length;
+        const n = matrix[0].length;
+        const steps = [];
+        
+        // 深拷贝矩阵
+        const A = matrix.map(row => [...row]);
+        
+        // 前向消元
+        for (let i = 0; i < Math.min(m, n-1); i++) {
+            // 找主元
+            let pivot = i;
+            for (let j = i + 1; j < m; j++) {
+                if (Math.abs(A[j][i]) > Math.abs(A[pivot][i])) {
+                    pivot = j;
+                }
+            }
+            
+            // 交换行
+            if (pivot !== i) {
+                [A[i], A[pivot]] = [A[pivot], A[i]];
+                steps.push({
+                    matrix: A.map(row => [...row]),
+                    pivot: [i, i],
+                    description: `交换第${i+1}行和第${pivot+1}行`
+                });
+            }
+            
+            // 消元
+            for (let j = i + 1; j < m; j++) {
+                const factor = A[j][i] / A[i][i];
+                for (let k = i; k < n; k++) {
+                    A[j][k] -= factor * A[i][k];
+                }
+                steps.push({
+                    matrix: A.map(row => [...row]),
+                    pivot: [i, i],
+                    description: `用第${i+1}行消去第${j+1}行`
+                });
+            }
+        }
+        
+        return steps;
+    }
+    
+    // 添加控制面板
+    const controls = d3.select(container)
+        .append("div")
+        .attr("class", "gaussian-controls");
+    
+    // 矩阵输入
+    controls.append("div")
+        .html(`
+            <div class="matrix-input">
+                <label>增广矩阵:</label><br>
+                <input type="number" id="m11" value="1" step="0.1" style="width:60px">
+                <input type="number" id="m12" value="1" step="0.1" style="width:60px">
+                <input type="number" id="m13" value="2" step="0.1" style="width:60px"><br>
+                <input type="number" id="m21" value="1" step="0.1" style="width:60px">
+                <input type="number" id="m22" value="-1" step="0.1" style="width:60px">
+                <input type="number" id="m23" value="0" step="0.1" style="width:60px">
+            </div>
+            <div class="step-controls">
+                <button id="prev-step">上一步</button>
+                <button id="next-step">下一步</button>
+                <span id="step-info"></span>
+            </div>
+        `);
+    
+    let currentStep = 0;
+    let eliminationSteps = [];
+    
+    // 更新函数
+    function updateElimination() {
+        const matrix = [
+            [parseFloat(d3.select("#m11").property("value")),
+             parseFloat(d3.select("#m12").property("value")),
+             parseFloat(d3.select("#m13").property("value"))],
+            [parseFloat(d3.select("#m21").property("value")),
+             parseFloat(d3.select("#m22").property("value")),
+             parseFloat(d3.select("#m23").property("value"))]
+        ];
+        
+        eliminationSteps = gaussianElimination(matrix);
+        currentStep = 0;
+        
+        drawEliminationStep(matrix);
+        updateStepInfo();
+    }
+    
+    function updateStepInfo() {
+        d3.select("#step-info").text(
+            `步骤 ${currentStep + 1} / ${eliminationSteps.length + 1}`
+        );
+    }
+    
+    // 添加事件监听器
+    ["m11", "m12", "m13", "m21", "m22", "m23"].forEach(id => {
+        d3.select("#" + id).on("input", updateElimination);
+    });
+    
+    d3.select("#prev-step").on("click", () => {
+        if (currentStep > 0) {
+            currentStep--;
+            if (currentStep === 0) {
+                const matrix = [
+                    [parseFloat(d3.select("#m11").property("value")),
+                     parseFloat(d3.select("#m12").property("value")),
+                     parseFloat(d3.select("#m13").property("value"))],
+                    [parseFloat(d3.select("#m21").property("value")),
+                     parseFloat(d3.select("#m22").property("value")),
+                     parseFloat(d3.select("#m23").property("value"))]
+                ];
+                drawEliminationStep(matrix);
+            } else {
+                drawEliminationStep(eliminationSteps[currentStep-1].matrix,
+                                  eliminationSteps[currentStep-1]);
+            }
+            updateStepInfo();
+        }
+    });
+    
+    d3.select("#next-step").on("click", () => {
+        if (currentStep < eliminationSteps.length) {
+            drawEliminationStep(eliminationSteps[currentStep].matrix,
+                              eliminationSteps[currentStep]);
+            currentStep++;
+            updateStepInfo();
+        }
+    });
+    
+    // 初始化
+    updateElimination();
+}
+
 // 导出函数
 window.LinearAlgebraViz = {
     createVectorVisualization,
@@ -1257,7 +1571,9 @@ window.LinearAlgebraViz = {
     createEigenViz,
     createEigenDecompViz,
     createSVDViz,
-    createSVDApplicationViz
+    createSVDApplicationViz,
+    createLinearSystemViz,
+    createGaussianEliminationViz
 };
 
 // 辅助函数：计算叉积
