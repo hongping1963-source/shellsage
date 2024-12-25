@@ -9,11 +9,17 @@ author: ShellSage Team
 
 # Mastering Git with ShellSage: A Complete Guide
 
+![Git Suggestions](/assets/images/blog/git-suggestions.gif)
+*ShellSage providing smart Git command suggestions*
+
 Git is an essential tool for modern software development, but its command-line interface can be challenging to master. In this guide, we'll explore how ShellSage makes Git workflows more intuitive and efficient.
 
 ## Smart Git Command Suggestions
 
 ShellSage analyzes your Git workflow and provides context-aware suggestions:
+
+![Git Workflow](/assets/images/blog/git-commit-flow.gif)
+*Complete Git workflow with ShellSage suggestions*
 
 ```bash
 # When you're working on a new feature
@@ -27,6 +33,9 @@ $ git
 ## Preventing Common Git Mistakes
 
 ShellSage helps prevent common Git mistakes before they happen:
+
+![Git Error Prevention](/assets/images/blog/git-error-prevention.gif)
+*ShellSage preventing dangerous Git operations*
 
 ### 1. Force Push Protection
 ```bash

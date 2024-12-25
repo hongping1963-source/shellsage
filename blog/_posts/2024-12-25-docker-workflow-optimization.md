@@ -9,9 +9,15 @@ author: ShellSage Team
 
 # Optimizing Docker Workflows with ShellSage
 
+![Docker Management](/assets/images/blog/docker-container-management.gif)
+*ShellSage streamlining Docker container management*
+
 Docker has revolutionized how we build, ship, and run applications. However, managing containers and images through the command line can be complex. Let's explore how ShellSage makes Docker operations more efficient and error-free.
 
 ## Smart Container Management
+
+![Docker Compose](/assets/images/blog/docker-compose-workflow.gif)
+*Efficient Docker Compose workflow with ShellSage*
 
 ### 1. Container Lifecycle Commands
 ShellSage provides context-aware suggestions for container operations:
@@ -131,6 +137,21 @@ $ docker volume
 # Backup container data
 $ docker
 > docker run --rm -v data-vol:/data -v $(pwd):/backup alpine tar -czf /backup/data.tar.gz /data
+```
+
+## Container Monitoring and Health Checks
+
+![Docker Monitoring](/assets/images/blog/docker-monitoring.gif)
+*Real-time container monitoring with ShellSage*
+
+### 1. Resource Usage
+```bash
+# Monitor container resources
+$ docker stats
+> Suggestions:
+> docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+> docker top web-app     # Process list
+> docker logs -f web-app # Live logs
 ```
 
 ## Advanced Docker Features

@@ -9,9 +9,15 @@ author: ShellSage Team
 
 # Efficient NPM Package Management with ShellSage
 
+![NPM Install](/assets/images/blog/npm-install-suggestions.gif)
+*Smart NPM package installation suggestions*
+
 Managing Node.js packages efficiently is crucial for modern web development. Let's explore how ShellSage makes NPM operations more intuitive and productive.
 
 ## Smart Package Installation
+
+![NPM Scripts](/assets/images/blog/npm-script-management.gif)
+*Efficient NPM script management with ShellSage*
 
 ### 1. Installing Dependencies
 ShellSage provides context-aware package installation suggestions:
@@ -168,6 +174,9 @@ $ npm
 > npm audit fix         # Fix vulnerabilities
 > npm audit fix --force # Force fix
 ```
+
+![NPM Security](/assets/images/blog/npm-security-audit.gif)
+*Automated security auditing with ShellSage*
 
 ### 2. Package Verification
 ```bash
