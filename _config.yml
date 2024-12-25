@@ -1,11 +1,23 @@
 theme: jekyll-theme-cayman
-title: ShellSage
-description: Intelligent Command-Line Assistant for VS Code - Updated
+title: ShellSage - Smart Command-Line Assistant for VS Code
+description: Boost your terminal productivity with AI-powered command suggestions, error prevention, and intelligent assistance
 show_downloads: true
 google_analytics:
 plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
+
+# SEO settings
+tagline: Smart Command-Line Assistant for VS Code
+keywords: vscode extension, terminal, command line, AI assistant, productivity tool
+twitter:
+  username: hongping1963
+  card: summary_large_image
+social:
+  name: Zhang Hongping
+  links:
+    - https://github.com/hongping1963-source
+    - https://twitter.com/hongping1963
 
 # Site settings
 author:
