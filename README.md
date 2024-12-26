@@ -1,92 +1,131 @@
-# ShellSage
+# ShellSage 
 
-🚀 Intelligent Command-Line Assistant for VS Code
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=shellsage)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/hongping1963-source/shellsage/graphs/commit-activity)
+[![GitHub issues](https://img.shields.io/github/issues/hongping1963-source/shellsage)](https://github.com/hongping1963-source/shellsage/issues)
 
-ShellSage is a powerful VS Code extension that enhances your terminal experience with smart command suggestions, advanced statistics, and intelligent error prevention.
+> 您的VS Code智能终端助手！自动检测并纠正命令错误，提升您的终端使用效率。
 
-## ✨ Features
+<p align="center">
+  <img src="images/demo.gif" alt="ShellSage Demo" width="600">
+</p>
 
-See our [detailed features documentation](docs/FEATURES.md) for a complete list of capabilities.
+## 📌 项目状态
 
-- 🤖 Intelligent Command Suggestions
-- 📊 Advanced Usage Statistics
-- 🔍 Smart Pattern Recognition
-- ⚡ Real-time Error Prevention
-- 📈 Command Complexity Analysis
-- 🎯 Context-Aware Predictions
+当前版本：v0.1.0-alpha（早期开发阶段）
 
-## 🚀 Quick Start
+[查看完整项目状态和路线图](./docs/PROJECT_STATUS.md)
 
-1. Install the extension from VS Code Marketplace
-2. Open a terminal in VS Code
-3. Start typing commands and see intelligent suggestions
-4. Use `Ctrl+Shift+P` and type "ShellSage" to access all features
+### 已实现功能
+- ✅ 基础Shell集成
+- ✅ 基本的错误检测
+- ✅ VS Code扩展框架
+- ✅ 简单的配置选项
 
-## 📚 Examples
+### 开发中功能
+- 🚧 高级错误检测
+- 🚧 AI驱动的建议系统
+- 🚧 更多Shell支持
+- 🚧 性能优化
 
-We provide comprehensive examples for common development workflows:
+## 🌟 主要特性
 
-### Development Tools
-- [Git Workflow Guide](examples/git-workflow.md) - Version control best practices
-- [Docker Workflow Guide](examples/docker-workflow.md) - Container management examples
-- [NPM Workflow Guide](examples/npm-workflow.md) - Node.js package management
-- [Linux Commands Guide](examples/linux-commands.md) - Essential Linux operations
+- **智能命令纠正**
+  - 实时检测并建议修正错误命令
+  - 支持多种Shell环境
+  - 上下文感知的建议系统
 
-Each guide includes:
-- 📝 Detailed command explanations
-- 🎯 Common use cases
-- ⚠️ Error prevention tips
-- 💡 Best practices
+- **VS Code深度集成**
+  - 无缝融入VS Code终端
+  - 快捷键支持
+  - 自定义配置选项
 
-## 🎯 Use Cases
+- **性能优化**
+  - 快速响应
+  - 资源占用小
+  - 高效缓存系统
 
-1. **Command Suggestions**
-   - Get context-aware command completions
-   - Receive intelligent suggestions based on history
-   - See command popularity and success rates
+## 📥 安装
 
-2. **Error Prevention**
-   - Catch common mistakes before they happen
-   - Get instant feedback on command syntax
-   - Learn from past errors
+### 系统要求
+- VS Code 1.60.0 或更高版本
+- Node.js 16.x 或更高版本
+- 支持的操作系统：Windows、macOS、Linux
 
-3. **Productivity Enhancement**
-   - Quick access to frequently used commands
-   - Smart command sequence suggestions
-   - Time-based command recommendations
+### 安装步骤
+1. 打开VS Code
+2. 按下 `Ctrl+P` / `Cmd+P`
+3. 输入 `ext install shellsage`
+4. 按下回车键
 
-## 🔧 Configuration
+## 🚀 快速开始
 
-ShellSage is highly configurable. Access settings through:
-1. VS Code Settings (`Ctrl+,`)
-2. Search for "ShellSage"
-3. Customize according to your needs
+1. 在VS Code中打开终端
+2. 输入命令（即使有拼写错误也没关系！）
+3. ShellSage会自动检测并提供纠正建议
+4. 按回车键接受建议
 
-## 📊 Statistics
+### 示例
 
-View your command usage statistics:
-1. Press `Ctrl+Shift+P`
-2. Type "ShellSage: Show Statistics"
-3. See detailed analytics about your command usage
+```bash
+# 错误输入 'git status'
+$ git stauts
+ ShellSage: 您是想输入 'git status' 吗？
 
-## 🤝 Contributing
+# 错误输入 'docker ps'
+$ dcoker ps
+ ShellSage: 您是想输入 'docker ps' 吗？
+```
 
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+## ⚙️ 配置
 
-## 📝 License
+通过VS Code设置面板（`Ctrl+,`）配置ShellSage：
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- `shellsage.enableAutoCorrect`: 启用/禁用自动纠正
+- `shellsage.showInlineCorrections`: 显示内联建议
+- `shellsage.maxSuggestions`: 最大建议数量
 
-## 🌟 Show Your Support
+详细配置选项请参考[配置文档](./docs/CONFIGURATION.md)。
 
-If you find ShellSage helpful, please:
-- Star this repository
-- Share with your friends
-- [Report issues](https://github.com/hongping1963-source/shellsage/issues)
-- [Submit feature requests](https://github.com/hongping1963-source/shellsage/issues)
+## 📚 文档
 
-## 📞 Contact
+- [使用指南](./docs/FAQ_IMPROVEMENT.md)
+- [开发指南](./docs/DEVELOPMENT.md)
+- [贡献指南](./docs/CONTRIBUTING_GUIDE.md)
+- [项目状态](./docs/PROJECT_STATUS.md)
+- [常见问题](./docs/FAQ_IMPROVEMENT.md)
 
-- Create an [issue](https://github.com/hongping1963-source/shellsage/issues) for bug reports
-- Submit a [pull request](https://github.com/hongping1963-source/shellsage/pulls) for contributions
-- Star the repository to show your support!
+## 🤝 参与贡献
+
+我们欢迎各种形式的贡献！
+
+- 🐛 [报告问题](https://github.com/hongping1963-source/shellsage/issues)
+- 💡 [提出建议](https://github.com/hongping1963-source/shellsage/issues)
+- 📝 [改进文档](./docs/CONTRIBUTING_GUIDE.md)
+- 💻 [提交代码](./docs/CONTRIBUTING_GUIDE.md)
+
+查看[贡献指南](./docs/CONTRIBUTING_GUIDE.md)了解更多信息。
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+## 🙏 致谢
+
+- [TheFuck](https://github.com/nvbn/thefuck) - 项目灵感来源
+- 所有[贡献者](./CONTRIBUTORS.md)
+- VS Code团队提供的优秀扩展API
+
+## 📬 联系我们
+
+- GitHub Issues: 问题报告和功能请求
+- GitHub Discussions: 一般讨论和问题解答
+- Email: support@shellsage.com（即将推出）
+
+---
+
+<p align="center">
+  Made with ❤️ by the ShellSage Team
+</p>
