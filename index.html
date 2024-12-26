@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to ShellSage</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/shellsage/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
@@ -211,5 +211,23 @@
             </div>
         </div>
     </div>
+    <script src="/shellsage/js/shellsage.js"></script>
+    <script>
+        // 初始化 ShellSage
+        const shellSage = new ShellSage();
+        
+        // 在这里添加与UI交互的代码
+        document.addEventListener('DOMContentLoaded', () => {
+            // 示例：模拟命令输入和响应
+            const commandGroups = document.querySelectorAll('.command-group');
+            commandGroups.forEach(group => {
+                const command = group.querySelector('.command');
+                if (command) {
+                    // 记录命令历史
+                    shellSage.commandHistory.push(command.textContent);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
