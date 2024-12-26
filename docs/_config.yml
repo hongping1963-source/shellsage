@@ -1,0 +1,8 @@
+theme: jekyll-theme-cayman
+title: ShellSage
+description: Your intelligent terminal companion in VS Code
+show_downloads: true
+github:
+  repository_url: https://github.com/hongping1963-source/shellsage
+  zip_url: https://github.com/hongping1963-source/shellsage/archive/main.zip
+  tar_url: https://github.com/hongping1963-source/shellsage/archive/main.tar.gz

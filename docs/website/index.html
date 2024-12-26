@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to ShellSage</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="banner">
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-buttons">
+                    <span class="close"></span>
+                    <span class="minimize"></span>
+                    <span class="maximize"></span>
+                </div>
+                <div class="terminal-title">shellsage</div>
+            </div>
+            <div class="terminal-body">
+                <div class="command-line">
+                    <span class="prompt">$</span>
+                    <span class="command">git stauts</span>
+                </div>
+                <div class="shellsage-response">
+                    <span class="error">Command 'stauts' not found. Did you mean:</span>
+                    <span class="suggestion">💡 git status</span>
+                </div>
+                <div class="command-line">
+                    <span class="prompt">$</span>
+                    <span class="command">git status</span>
+                </div>
+                <div class="status-output">
+                    On branch main
+                    Your branch is up to date with 'origin/main'
+                    
+                    Changes not staged for commit:
+                      (use "git add ..." to update what will be committed)
+                    
+                    modified: src/extension.ts
+                </div>
+            </div>
+        </div>
+        <div class="welcome-text">
+            <h1>Welcome to ShellSage</h1>
+            <p>Your intelligent terminal companion in VS Code</p>
+            <div class="cta-buttons">
+                <a href="https://marketplace.visualstudio.com/items?itemName=shellsage" class="button primary">Install Now</a>
+                <a href="https://github.com/hongping1963-source/shellsage" class="button secondary">View on GitHub</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

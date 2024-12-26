@@ -1,0 +1,126 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">{{ page.title }}</h1>
+    <p class="post-meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">
+        {%- assign date_format = "%Y-%m-%d" -%}
+        {{ page.date | date: date_format }}
+      </time>
+      {%- if page.author -%}
+        • <span class="post-author">{{ page.author }}</span>
+      {%- endif -%}
+    </p>
+    {%- if page.tags.size > 0 -%}
+    <div class="post-tags">
+      Tags: 
+      {%- for tag in page.tags -%}
+        <span class="post-tag">{{ tag }}</span>
+      {%- endfor -%}
+    </div>
+    {%- endif -%}
+  </header>
+
+  <div class="post-content">
+    {{ content }}
+  </div>
+
+  <footer class="post-footer">
+    <div class="post-navigation">
+      {% if page.previous.url %}
+        <a class="prev" href="{{page.previous.url}}">&laquo; {{page.previous.title}}</a>
+      {% endif %}
+      {% if page.next.url %}
+        <a class="next" href="{{page.next.url}}">{{page.next.title}} &raquo;</a>
+      {% endif %}
+    </div>
+  </footer>
+</article>
+
+<div class="comments-section">
+  <h2>Comments</h2>
+  {% include comments.html %}
+</div>
+
+<style>
+.post-header {
+    margin-bottom: 2rem;
+}
+
+.post-title {
+    margin-bottom: 0.5rem;
+}
+
+.post-meta {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.post-tags {
+    margin-top: 0.5rem;
+}
+
+.post-tag {
+    background-color: #f0f0f0;
+    padding: 0.2rem 0.5rem;
+    margin-right: 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.post-content {
+    margin: 2rem 0;
+}
+
+.post-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.post-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+}
+
+.post-navigation a {
+    color: #0366d6;
+    text-decoration: none;
+}
+
+.post-navigation a:hover {
+    text-decoration: underline;
+}
+
+.comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #eee;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .post-meta {
+        color: #999;
+    }
+    
+    .post-tag {
+        background-color: #2a2a2a;
+    }
+    
+    .post-footer {
+        border-top-color: #2a2a2a;
+    }
+    
+    .comments-section {
+        border-top-color: #2a2a2a;
+    }
+    
+    .post-navigation a {
+        color: #58a6ff;
+    }
+}
+</style>
