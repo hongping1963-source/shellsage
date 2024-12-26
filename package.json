@@ -1,115 +1,136 @@
 {
   "name": "shellsage",
   "displayName": "ShellSage",
-  "description": "智能的命令行助手，提供命令纠错、建议和使用分析",
-  "version": "0.1.0",
-  "engines": {
-    "vscode": "^1.60.0"
+  "description": "An intelligent VS Code extension that automatically corrects and enhances terminal commands",
+  "version": "1.0.0",
+  "publisher": "vscode-thefuck-team",
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hongping1224/shellsage"
   },
+  "bugs": {
+    "url": "https://github.com/hongping1224/shellsage/issues"
+  },
+  "homepage": "https://github.com/hongping1224/shellsage#readme",
   "categories": [
-    "Other"
+    "Other",
+    "Snippets",
+    "Programming Languages"
   ],
+  "keywords": [
+    "vscode-extension",
+    "terminal",
+    "cli",
+    "command-line",
+    "shell",
+    "command-correction",
+    "productivity",
+    "thefuck",
+    "command",
+    "fix"
+  ],
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
   "activationEvents": [
-    "onCommand:shellsage.showRecommendations",
-    "onCommand:shellsage.showStatistics",
+    "onCommand:vscode-thefuck.correct",
+    "onCommand:vscode-thefuck.showHistory",
     "onTerminalProfile"
   ],
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
+  "browser": "./dist/web/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "shellsage.showRecommendations",
-        "title": "显示命令推荐"
+        "command": "vscode-thefuck.correct",
+        "title": "TheFuck: 纠正命令",
+        "category": "TheFuck"
       },
       {
-        "command": "shellsage.showStatistics",
-        "title": "显示使用统计"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "shellsage.showRecommendations",
-        "key": "ctrl+shift+space",
-        "when": "terminalFocus"
+        "command": "vscode-thefuck.showHistory",
+        "title": "TheFuck: 显示历史记录",
+        "category": "TheFuck"
       }
     ],
     "configuration": {
-      "title": "ShellSage",
+      "title": "VS Code TheFuck",
       "properties": {
-        "shellsage.suggestions.enabled": {
+        "vscode-thefuck.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Python 可执行文件的路径。留空使用内置 Python 环境。"
+        },
+        "vscode-thefuck.thefuckPath": {
+          "type": "string",
+          "default": "",
+          "description": "TheFuck 可执行文件的路径。留空使用内置 TheFuck。"
+        },
+        "vscode-thefuck.showDiff": {
           "type": "boolean",
           "default": true,
-          "description": "是否启用命令建议功能"
+          "description": "显示命令修改的差异。"
         },
-        "shellsage.suggestions.triggerCharacters": {
-          "type": "array",
-          "default": ["-", ".", "/"],
-          "description": "触发命令建议的字符"
-        },
-        "shellsage.suggestions.maxItems": {
-          "type": "number",
-          "default": 5,
-          "description": "最大建议数量"
-        },
-        "shellsage.recommendations.enabled": {
+        "vscode-thefuck.requireConfirmation": {
           "type": "boolean",
           "default": true,
-          "description": "是否启用命令推荐功能"
+          "description": "执行纠正后的命令前需要确认。"
         },
-        "shellsage.recommendations.maxItems": {
+        "vscode-thefuck.enableNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用通知提示。"
+        },
+        "vscode-thefuck.historySize": {
           "type": "number",
-          "default": 5,
-          "description": "最大推荐数量"
-        },
-        "shellsage.recommendations.patterns": {
-          "type": "array",
-          "default": [
-            {
-              "pattern": "^git",
-              "commands": ["git status", "git add", "git commit", "git push", "git pull"],
-              "description": "Git 版本控制命令"
-            },
-            {
-              "pattern": "^npm",
-              "commands": ["npm install", "npm start", "npm run", "npm test"],
-              "description": "NPM 包管理命令"
-            },
-            {
-              "pattern": "^docker",
-              "commands": ["docker ps", "docker images", "docker run", "docker-compose up"],
-              "description": "Docker 容器命令"
-            }
-          ],
-          "description": "命令推荐模式配置"
+          "default": 100,
+          "description": "保存的历史记录数量。"
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "vscode-thefuck.correct",
+        "key": "ctrl+alt+f",
+        "mac": "cmd+alt+f",
+        "when": "terminalFocus"
+      }
+    ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "webpack",
-    "watch": "webpack --watch",
-    "package": "webpack --mode production --devtool hidden-source-map",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "package-web": "webpack --mode production --config webpack.config.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
-    "@types/vscode": "^1.60.0",
-    "@types/glob": "^7.1.3",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "14.x",
-    "eslint": "^7.27.0",
-    "@typescript-eslint/eslint-plugin": "^4.26.0",
-    "@typescript-eslint/parser": "^4.26.0",
-    "glob": "^7.1.7",
-    "mocha": "^8.4.0",
-    "typescript": "^4.3.2",
-    "vscode-test": "^1.5.2",
-    "ts-loader": "^9.2.2",
-    "webpack": "^5.38.1",
-    "webpack-cli": "^4.7.0"
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.5",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "diff": "^5.1.0"
   }
 }
