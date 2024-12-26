@@ -1,332 +1,199 @@
-# 建议引擎性能优化设计
+# ShellSage 智能纠正引擎设计文档
 
-## 1. 性能瓶颈分析
+## 1. 功能概述
 
-### 1.1 当前主要性能问题
-- 命令解析延迟
-- 建议生成时间
-- 内存占用
-- CPU 使用率峰值
-- 并发处理能力
+ShellSage的智能纠正引擎是核心组件，负责检测、分析和纠正命令行错误。
 
-### 1.2 性能指标目标
-```typescript
-interface PerformanceTargets {
-  suggestionLatency: number;    // < 100ms
-  memoryUsage: number;         // < 50MB
-  cpuUsage: number;           // 峰值 < 10%
-  concurrentRequests: number; // 支持 10+ 并发
-  cacheHitRate: number;      // > 80%
-}
+### 1.1 当前实现状态
+
+| 功能模块 | 完成度 | 详细说明 |
+|---------|--------|----------|
+| 基础错误检测 | 70% | 已实现基本的命令不存在、参数错误检测 |
+| 模式匹配 | 50% | 实现了简单的字符串相似度比较 |
+| 上下文分析 | 30% | 基础的历史命令分析 |
+| AI增强建议 | 0% | 计划中 |
+
+### 1.2 主要功能点
+
+- [x] 命令存在性检查
+- [x] 基本拼写错误检测
+- [x] 简单参数顺序纠正
+- [ ] 智能上下文分析
+- [ ] AI驱动的建议生成
+- [ ] 学习用户偏好
+
+## 2. 技术架构
+
+### 2.1 核心组件
+
+```
+suggestion-engine/
+├── detector/           # 错误检测模块
+│   ├── basic.ts       # 基础错误检测
+│   ├── advanced.ts    # 高级错误模式
+│   └── patterns.ts    # 错误模式定义
+├── analyzer/          # 分析模块
+│   ├── context.ts     # 上下文分析
+│   ├── history.ts     # 历史记录分析
+│   └── similarity.ts  # 相似度计算
+└── generator/         # 建议生成模块
+    ├── basic.ts       # 基础建议生成
+    ├── ai.ts         # AI增强建议（计划中）
+    └── ranking.ts    # 建议排序
 ```
 
-## 2. 优化策略
+### 2.2 数据流程
 
-### 2.1 缓存系统设计
-```typescript
-class SuggestionCache {
-  private cache: LRUCache<string, Suggestion[]>;
-  private readonly DEFAULT_CACHE_SIZE = 1000;
-  private readonly DEFAULT_TTL = 24 * 60 * 60 * 1000; // 24小时
+1. 命令输入 → 错误检测
+2. 错误分析 → 上下文收集
+3. 建议生成 → 结果排序
+4. 用户反馈 → 模型优化
 
-  constructor(options?: CacheOptions) {
-    this.cache = new LRUCache({
-      max: options?.size || this.DEFAULT_CACHE_SIZE,
-      ttl: options?.ttl || this.DEFAULT_TTL,
-      updateAgeOnGet: true
-    });
-  }
+## 3. 实现细节
 
-  async getSuggestion(command: string): Promise<Suggestion[]> {
-    const cacheKey = this.generateCacheKey(command);
-    
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
-    }
+### 3.1 错误检测模块
 
-    const suggestions = await this.generateSuggestions(command);
-    this.cache.set(cacheKey, suggestions);
-    return suggestions;
-  }
+#### 已实现功能
+- 命令不存在检测
+- 基本参数错误检测
+- 简单拼写错误识别
 
-  private generateCacheKey(command: string): string {
-    // 考虑命令上下文的哈希键生成
-    return crypto
-      .createHash('md5')
-      .update(`${command}_${this.getContext()}`)
-      .digest('hex');
-  }
-}
-```
+#### 实现中功能
+- 复杂参数组合验证
+- 路径相关错误检测
+- 权限相关错误检测
 
-### 2.2 并发处理优化
-```typescript
-class SuggestionEngine {
-  private worker: Worker;
-  private taskQueue: PriorityQueue<SuggestionTask>;
+### 3.2 分析模块
 
-  constructor() {
-    this.worker = new Worker('./suggestion.worker.ts');
-    this.taskQueue = new PriorityQueue();
-  }
+#### 已实现功能
+- 基础字符串相似度比较
+- 简单的历史命令分析
 
-  async processSuggestions(command: string): Promise<Suggestion[]> {
-    const task = new SuggestionTask(command);
-    
-    // 优先级处理
-    if (this.isHighPriorityCommand(command)) {
-      this.taskQueue.addHighPriority(task);
-    } else {
-      this.taskQueue.add(task);
-    }
+#### 实现中功能
+- 上下文感知分析
+- 用户行为模式识别
+- 命令依赖关系分析
 
-    return this.worker.execute(task);
-  }
+### 3.3 建议生成模块
 
-  private isHighPriorityCommand(command: string): boolean {
-    // 基于命令特征和上下文判断优先级
-    return this.analyzeCommandPriority(command) > 0.8;
-  }
-}
-```
+#### 已实现功能
+- 基于相似度的建议
+- 简单的参数调整建议
 
-### 2.3 增量更新机制
-```typescript
-class IncrementalSuggestionEngine {
-  private lastCommand: string = '';
-  private lastSuggestions: Suggestion[] = [];
+#### 计划中功能
+- AI驱动的建议生成
+- 个性化建议排序
+- 学习型建议系统
 
-  async updateSuggestions(command: string): Promise<Suggestion[]> {
-    if (this.canIncrementalUpdate(command)) {
-      return this.performIncrementalUpdate(command);
-    }
-    
-    // 完全重新计算
-    this.lastCommand = command;
-    this.lastSuggestions = await this.generateFullSuggestions(command);
-    return this.lastSuggestions;
-  }
+## 4. 开发路线图
 
-  private canIncrementalUpdate(command: string): boolean {
-    return command.startsWith(this.lastCommand) && 
-           command.length - this.lastCommand.length <= 3;
-  }
+### 4.1 近期目标（1-2个月）
 
-  private async performIncrementalUpdate(command: string): Promise<Suggestion[]> {
-    const diff = command.slice(this.lastCommand.length);
-    return this.updateExistingSuggestions(this.lastSuggestions, diff);
-  }
-}
-```
+1. 完善基础错误检测
+   - [ ] 提高命令识别准确率
+   - [ ] 增加更多错误模式
+   - [ ] 优化性能
 
-### 2.4 内存优化
-```typescript
-class MemoryOptimizedEngine {
-  private readonly MAX_SUGGESTIONS = 5;
-  private readonly MAX_HISTORY = 100;
+2. 改进分析模块
+   - [ ] 实现更复杂的上下文分析
+   - [ ] 添加用户行为学习
+   - [ ] 优化相似度算法
 
-  private suggestionPool: ObjectPool<Suggestion>;
-  private commandHistory: CircularBuffer<string>;
+### 4.2 中期目标（3-4个月）
 
-  constructor() {
-    this.suggestionPool = new ObjectPool(
-      () => new Suggestion(),
-      this.MAX_SUGGESTIONS * 2
-    );
-    this.commandHistory = new CircularBuffer(this.MAX_HISTORY);
-  }
+1. 增强建议系统
+   - [ ] 实现AI建议生成
+   - [ ] 添加用户反馈学习
+   - [ ] 优化建议排序
 
-  async getSuggestions(command: string): Promise<Suggestion[]> {
-    const suggestions = this.suggestionPool.acquire(this.MAX_SUGGESTIONS);
-    try {
-      await this.fillSuggestions(suggestions, command);
-      return suggestions;
-    } finally {
-      this.suggestionPool.release(suggestions);
-    }
-  }
-}
-```
+2. 性能优化
+   - [ ] 提高响应速度
+   - [ ] 减少资源占用
+   - [ ] 优化缓存策略
 
-### 2.5 预测性加载
-```typescript
-class PredictiveSuggestionEngine {
-  private predictor: CommandPredictor;
-  private preloadCache: Map<string, Promise<Suggestion[]>>;
+### 4.3 长期目标（6个月以上）
 
-  constructor() {
-    this.predictor = new CommandPredictor();
-    this.preloadCache = new Map();
-  }
+1. 高级功能
+   - [ ] 多语言支持
+   - [ ] 复杂命令理解
+   - [ ] 预测性建议
 
-  async preloadLikelySuggestions(currentCommand: string): Promise<void> {
-    const predictions = await this.predictor.getPredictions(currentCommand);
-    
-    for (const prediction of predictions.slice(0, 3)) {
-      if (!this.preloadCache.has(prediction)) {
-        this.preloadCache.set(
-          prediction,
-          this.generateSuggestions(prediction)
-        );
-      }
-    }
-  }
-}
-```
+2. 生态系统
+   - [ ] 插件系统
+   - [ ] 自定义规则
+   - [ ] 社区贡献集成
 
-## 3. 性能监控
+## 5. 性能指标
 
-### 3.1 指标收集
-```typescript
-class PerformanceMonitor {
-  private metrics: MetricsCollector;
+### 5.1 当前性能
 
-  async measureOperation<T>(
-    operation: () => Promise<T>,
-    context: string
-  ): Promise<T> {
-    const start = performance.now();
-    const startMemory = process.memoryUsage().heapUsed;
+| 指标 | 当前值 | 目标值 |
+|------|--------|--------|
+| 响应时间 | <200ms | <100ms |
+| 准确率 | 75% | >90% |
+| 建议相关性 | 70% | >85% |
+| CPU使用率 | <5% | <3% |
 
-    try {
-      const result = await operation();
-      
-      this.metrics.record({
-        operation: context,
-        duration: performance.now() - start,
-        memoryDelta: process.memoryUsage().heapUsed - startMemory,
-        timestamp: Date.now()
-      });
+### 5.2 优化目标
 
-      return result;
-    } catch (error) {
-      this.metrics.recordError(context, error);
-      throw error;
-    }
-  }
-}
-```
+1. 响应速度
+   - 减少建议生成时间
+   - 优化算法复杂度
+   - 实现智能缓存
 
-### 3.2 性能报告
-```typescript
-interface PerformanceReport {
-  averageLatency: number;
-  p95Latency: number;
-  p99Latency: number;
-  memoryUsage: {
-    average: number;
-    peak: number;
-  };
-  cacheStats: {
-    hitRate: number;
-    missRate: number;
-    evictionRate: number;
-  };
-  errorRate: number;
-}
-```
+2. 准确率
+   - 改进错误检测算法
+   - 增加错误模式覆盖
+   - 优化上下文分析
 
-## 4. 自适应优化
+## 6. 测试策略
 
-### 4.1 动态资源管理
-```typescript
-class AdaptiveResourceManager {
-  private resources: ResourcePool;
-  private loadMonitor: LoadMonitor;
+### 6.1 已实现的测试
 
-  async adjustResources(): Promise<void> {
-    const load = await this.loadMonitor.getCurrentLoad();
-    
-    if (load.isCritical()) {
-      await this.resources.scale({
-        cacheSize: Math.max(this.resources.cacheSize * 0.8, MIN_CACHE_SIZE),
-        workerCount: Math.max(this.resources.workerCount - 1, MIN_WORKERS),
-        batchSize: Math.max(this.resources.batchSize * 0.7, MIN_BATCH_SIZE)
-      });
-    } else if (load.isLight()) {
-      await this.resources.scale({
-        cacheSize: Math.min(this.resources.cacheSize * 1.2, MAX_CACHE_SIZE),
-        workerCount: Math.min(this.resources.workerCount + 1, MAX_WORKERS),
-        batchSize: Math.min(this.resources.batchSize * 1.3, MAX_BATCH_SIZE)
-      });
-    }
-  }
-}
-```
+- [x] 基本单元测试
+- [x] 简单集成测试
+- [ ] 性能测试
+- [ ] 用户场景测试
 
-## 5. 实施计划
+### 6.2 计划中的测试
 
-### 5.1 第一阶段：基础优化（2周）
-- 实现基本缓存系统
-- 添加性能监控
-- 优化内存使用
+1. 自动化测试
+   - 端到端测试
+   - 压力测试
+   - 并发测试
 
-### 5.2 第二阶段：高级特性（2周）
-- 实现并发处理
-- 添加增量更新
-- 实现预测性加载
+2. 用户测试
+   - Beta测试程序
+   - A/B测试
+   - 用户反馈收集
 
-### 5.3 第三阶段：智能优化（2周）
-- 实现自适应资源管理
-- 优化缓存策略
-- 完善性能报告
+## 7. 文档和维护
 
-## 6. 性能测试
+### 7.1 文档状态
 
-### 6.1 测试场景
-```typescript
-interface TestScenario {
-  name: string;
-  commandPatterns: string[];
-  concurrentUsers: number;
-  duration: number;
-  expectedMetrics: {
-    maxLatency: number;
-    maxMemory: number;
-    maxCpu: number;
-    errorRate: number;
-  };
-}
-```
+- [x] 基础API文档
+- [x] 架构说明
+- [ ] 详细设计文档
+- [ ] 性能优化指南
 
-### 6.2 基准测试
-- 单命令响应时间
-- 并发处理能力
-- 内存使用曲线
-- CPU 使用率
-- 缓存命中率
+### 7.2 维护计划
 
-## 7. 降级策略
+1. 定期代码审查
+2. 性能监控
+3. 错误日志分析
+4. 用户反馈跟踪
 
-### 7.1 自动降级触发条件
-- 响应时间 > 200ms
-- 内存使用 > 80%
-- CPU 使用率 > 70%
-- 错误率 > 5%
+## 8. 贡献指南
 
-### 7.2 降级措施
-- 减少并发处理
-- 简化建议算法
-- 限制建议数量
-- 增加缓存依赖
+### 8.1 如何参与开发
 
-## 8. 监控和警报
+1. 查看[项目看板](https://github.com/hongping1963-source/shellsage/projects)
+2. 选择感兴趣的任务
+3. 提交Pull Request
 
-### 8.1 实时监控指标
-- 响应时间
-- 内存使用
-- CPU 使用率
-- 错误率
-- 缓存命中率
+### 8.2 代码规范
 
-### 8.2 警报阈值
-- 严重：响应时间 > 500ms
-- 警告：响应时间 > 200ms
-- 严重：内存使用 > 90%
-- 警告：内存使用 > 70%
-- 严重：错误率 > 10%
-- 警告：错误率 > 5%
-
----
-
-*本文档将根据实际实施效果持续更新。最后更新时间：2024-12-24*
+- 遵循TypeScript规范
+- 编写单元测试
+- 添加必要注释
+- 更新相关文档
