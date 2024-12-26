@@ -21,26 +21,96 @@
                 <div class="terminal-title">shellsage</div>
             </div>
             <div class="terminal-body">
-                <div class="command-line">
-                    <span class="prompt">$</span>
-                    <span class="command">git stauts</span>
-                </div>
-                <div class="shellsage-response">
-                    <span class="error">Command 'stauts' not found. Did you mean:</span>
-                    <span class="suggestion">💡 git status</span>
-                </div>
-                <div class="command-line">
-                    <span class="prompt">$</span>
-                    <span class="command">git status</span>
-                </div>
-                <div class="status-output">
-                    On branch main
-                    Your branch is up to date with 'origin/main'
-                    
-                    Changes not staged for commit:
-                      (use "git add ..." to update what will be committed)
-                    
-                    modified: src/extension.ts
+                <div class="terminal-scroll">
+                    <!-- Command Group 1 -->
+                    <div class="command-group">
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">git stauts</span>
+                        </div>
+                        <div class="shellsage-response">
+                            <span class="error">Command 'stauts' not found. Did you mean:</span>
+                            <span class="suggestion">💡 git status</span>
+                        </div>
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">git status</span>
+                        </div>
+                        <div class="status-output">
+                            On branch main
+                            Your branch is up to date with 'origin/main'
+                            
+                            Changes not staged for commit:
+                              (use "git add ..." to update what will be committed)
+                            
+                            modified: src/extension.ts
+                        </div>
+                    </div>
+
+                    <!-- Command Group 2 -->
+                    <div class="command-group">
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">dokcer run nginx</span>
+                        </div>
+                        <div class="shellsage-response">
+                            <span class="error">Command 'dokcer' not found. Did you mean:</span>
+                            <span class="suggestion">💡 docker run nginx</span>
+                        </div>
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">docker run nginx</span>
+                        </div>
+                        <div class="status-output">
+                            Unable to find image 'nginx:latest' locally
+                            latest: Pulling from library/nginx
+                            a2abf6c4d29d: Pull complete
+                            Digest: sha256:123...
+                            Status: Downloaded newer image for nginx:latest
+                        </div>
+                    </div>
+
+                    <!-- Command Group 3 -->
+                    <div class="command-group">
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">npm instal express</span>
+                        </div>
+                        <div class="shellsage-response">
+                            <span class="error">Command 'instal' is not valid. Did you mean:</span>
+                            <span class="suggestion">💡 npm install express</span>
+                        </div>
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">npm install express</span>
+                        </div>
+                        <div class="status-output">
+                            added 57 packages in 2s
+                            
+                            15 packages are looking for funding
+                            run `npm fund` for details
+                        </div>
+                    </div>
+
+                    <!-- Command Group 4 -->
+                    <div class="command-group">
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">pyhton app.py</span>
+                        </div>
+                        <div class="shellsage-response">
+                            <span class="error">Command 'pyhton' not found. Did you mean:</span>
+                            <span class="suggestion">💡 python app.py</span>
+                        </div>
+                        <div class="command-line">
+                            <span class="prompt">$</span>
+                            <span class="command">python app.py</span>
+                        </div>
+                        <div class="status-output">
+                            Server started at http://localhost:5000
+                            Press CTRL+C to quit
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
