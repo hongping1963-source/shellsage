@@ -269,6 +269,43 @@ h1 {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+.shellsage-response {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+}
+
+.context-info {
+    display: block;
+    color: var(--suggestion-color);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
+.completion-list {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+}
+
+.completion-item {
+    color: var(--command-color);
+    padding: 0.25rem 0;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.completion-item:hover {
+    transform: translateX(5px);
+}
+
+.shellsage-response .suggestion {
+    color: var(--suggestion-color);
+    display: block;
+    margin: 0.25rem 0;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--suggestion-color);
+}
+
 @media (max-width: 1200px) {
     .banner {
         padding: 1rem;
