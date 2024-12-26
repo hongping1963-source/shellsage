@@ -1,0 +1,60 @@
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="Search ShellSage docs...">
+    <div id="search-results"></div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script>
+docsearch({
+    appId: '{{ site.algolia.application_id }}',
+    apiKey: '{{ site.algolia.search_only_api_key }}',
+    indexName: '{{ site.algolia.index_name }}',
+    container: '#search-input',
+    debug: false
+});
+</script>
+
+<style>
+.search-container {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 600px;
+}
+
+#search-input {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+#search-results {
+    margin-top: 20px;
+}
+
+.search-result {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.search-result:hover {
+    background-color: #f5f5f5;
+}
+
+.search-result h3 {
+    margin: 0;
+    color: #0366d6;
+}
+
+.search-result p {
+    margin: 5px 0 0 0;
+    color: #586069;
+}
+</style>
