@@ -20,6 +20,9 @@
 
     <main class="page-content">
         <div class="wrapper">
+            {% if page.title %}
+            <h1>{{ page.title }}</h1>
+            {% endif %}
             {{ content }}
         </div>
     </main>
@@ -27,6 +30,9 @@
     <footer class="site-footer">
         <div class="wrapper">
             <p>&copy; {{ site.time | date: '%Y' }} {{ site.title }}. All rights reserved.</p>
+            {% if site.github.repository_url %}
+            <p><a href="{{ site.github.repository_url }}">View on GitHub</a></p>
+            {% endif %}
         </div>
     </footer>
 

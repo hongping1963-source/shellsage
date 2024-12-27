@@ -70,3 +70,40 @@
 - 查看[用户指南](./USER_GUIDE.md)了解基本用法
 - 查看[配置指南](./CONFIGURATION.md)了解高级设置
 - 查看[集成指南](./integrations.md)了解与其他工具的集成
+
+---
+layout: doc
+title: Installation Guide
+permalink: /installation/
+---
+
+# Installing ShellSage
+
+ShellSage can be installed directly from the VS Code marketplace.
+
+## Quick Installation
+
+1. Open VS Code
+2. Press `Ctrl+P` to open the Quick Open dialog
+3. Type `ext install shellsage`
+4. Press Enter
+
+## Manual Installation
+
+1. Download the VSIX file from our [releases page]({{ site.github.repository_url }}/releases)
+2. In VS Code, go to the Extensions view (`Ctrl+Shift+X`)
+3. Click the "..." menu in the top-right
+4. Select "Install from VSIX..."
+5. Choose the downloaded file
+
+## Verifying Installation
+
+After installation:
+
+1. Open a new terminal in VS Code (`Ctrl+` `)
+2. Type any command
+3. If you make a typo, you should see ShellSage's suggestions appear
+
+## Configuration
+
+See our [configuration guide](/docs/configuration/) for customization options.
