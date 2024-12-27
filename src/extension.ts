@@ -8,14 +8,147 @@ import { diffChars, Change } from 'diff';
 import { TaskIntegration, DebuggerIntegration, SCMIntegration } from './integrations';
 import { EnhancedCorrection } from './features/enhancedCorrection';
 
+// 增加日志记录工具
+interface ExtensionConfig {
+    pythonPath?: string;
+    maxHistorySize: number;
+    enableLogging: boolean;
+    logLevel: 'debug' | 'info' | 'warn' | 'error';
+    autoCorrect: boolean;
+    retryAttempts: number;
+    commandTimeout: number;
+}
+
+class ConfigManager {
+    private static instance: ConfigManager;
+    private config: ExtensionConfig;
+    private readonly DEFAULT_CONFIG: ExtensionConfig = {
+        maxHistorySize: 50,
+        enableLogging: true,
+        logLevel: 'info',
+        autoCorrect: false,
+        retryAttempts: 3,
+        commandTimeout: 10000
+    };
+
+    private constructor() {
+        this.config = this.loadConfig();
+    }
+
+    static getInstance(): ConfigManager {
+        if (!ConfigManager.instance) {
+            ConfigManager.instance = new ConfigManager();
+        }
+        return ConfigManager.instance;
+    }
+
+    private loadConfig(): ExtensionConfig {
+        try {
+            const config = vscode.workspace.getConfiguration('vscode-thefuck');
+            return {
+                pythonPath: config.get<string>('pythonPath'),
+                maxHistorySize: config.get<number>('maxHistorySize', this.DEFAULT_CONFIG.maxHistorySize),
+                enableLogging: config.get<boolean>('enableLogging', this.DEFAULT_CONFIG.enableLogging),
+                logLevel: config.get<'debug' | 'info' | 'warn' | 'error'>('logLevel', this.DEFAULT_CONFIG.logLevel),
+                autoCorrect: config.get<boolean>('autoCorrect', this.DEFAULT_CONFIG.autoCorrect),
+                retryAttempts: config.get<number>('retryAttempts', this.DEFAULT_CONFIG.retryAttempts),
+                commandTimeout: config.get<number>('commandTimeout', this.DEFAULT_CONFIG.commandTimeout)
+            };
+        } catch (error) {
+            console.error('Failed to load configuration:', error);
+            return this.DEFAULT_CONFIG;
+        }
+    }
+
+    getConfig(): ExtensionConfig {
+        return { ...this.config };
+    }
+
+    async updateConfig(newConfig: Partial<ExtensionConfig>): Promise<void> {
+        try {
+            const config = vscode.workspace.getConfiguration('vscode-thefuck');
+            for (const [key, value] of Object.entries(newConfig)) {
+                await config.update(key, value, vscode.ConfigurationTarget.Global);
+            }
+            this.config = { ...this.config, ...newConfig };
+            console.info('Configuration updated:', newConfig);
+        } catch (error) {
+            console.error('Failed to update configuration:', error);
+            throw error;
+        }
+    }
+
+    getPythonPath(): string | undefined {
+        return this.config.pythonPath;
+    }
+
+    getMaxHistorySize(): number {
+        return this.config.maxHistorySize;
+    }
+
+    isLoggingEnabled(): boolean {
+        return this.config.enableLogging;
+    }
+
+    getLogLevel(): string {
+        return this.config.logLevel;
+    }
+
+    isAutoCorrectEnabled(): boolean {
+        return this.config.autoCorrect;
+    }
+
+    getRetryAttempts(): number {
+        return this.config.retryAttempts;
+    }
+
+    getCommandTimeout(): number {
+        return this.config.commandTimeout;
+    }
+}
+
+const logger = {
+    debug: (message: string, ...args: any[]) => {
+        if (ConfigManager.getInstance().isLoggingEnabled() && 
+            ConfigManager.getInstance().getLogLevel() === 'debug') {
+            console.debug(`[VSCode-TheFuck] ${message}`, ...args);
+        }
+    },
+    info: (message: string, ...args: any[]) => {
+        if (ConfigManager.getInstance().isLoggingEnabled() && 
+            ['debug', 'info'].includes(ConfigManager.getInstance().getLogLevel())) {
+            console.log(`[VSCode-TheFuck] ${message}`, ...args);
+        }
+    },
+    warn: (message: string, ...args: any[]) => {
+        if (ConfigManager.getInstance().isLoggingEnabled() && 
+            ['debug', 'info', 'warn'].includes(ConfigManager.getInstance().getLogLevel())) {
+            console.warn(`[VSCode-TheFuck] ${message}`, ...args);
+        }
+    },
+    error: (message: string, error?: any) => {
+        if (ConfigManager.getInstance().isLoggingEnabled()) {
+            console.error(`[VSCode-TheFuck] ${message}`, error);
+        }
+    }
+};
+
 async function execAsync(command: string, args: string[] = [], options: any = {}): Promise<{ stdout: string; stderr: string }> {
+    logger.debug(`Executing command: ${command} ${args.join(' ')}`);
     return new Promise((resolve, reject) => {
         const { exec } = require('child_process');
         const cmd = `${command} ${args.join(' ')}`;
+        const startTime = Date.now();
+        
         exec(cmd, options, (error: any, stdout: string, stderr: string) => {
+            const duration = Date.now() - startTime;
+            logger.debug(`Command execution completed in ${duration}ms`);
+            
             if (error) {
+                logger.error('Command execution failed:', { error, stderr });
                 reject(error);
             } else {
+                logger.debug('Command output:', { stdout, stderr });
                 resolve({ stdout, stderr });
             }
         });
@@ -26,6 +159,9 @@ interface CommandHistory {
     original: string;
     corrected: string;
     timestamp: number;
+    shell: string;
+    exitCode?: number;
+    output?: string;
 }
 
 interface TerminalCommand {
@@ -35,20 +171,173 @@ interface TerminalCommand {
     shell: string;
 }
 
-let lastCommand = '';
-let lastExitCode = 0;
-let terminalDataListener: vscode.Disposable | undefined;
-const terminalCommands = new Map<string, TerminalCommand>();
-let pythonPath: string;
-let commandHistory: CommandHistory[] = [];
-const MAX_HISTORY_SIZE = 50;
+class CommandHistoryManager {
+    private static readonly MAX_HISTORY_SIZE = ConfigManager.getInstance().getMaxHistorySize();
+    private history: CommandHistory[] = [];
 
-// 错误类型定义
+    constructor(private context: vscode.ExtensionContext) {
+        this.loadHistory();
+    }
+
+    private loadHistory() {
+        try {
+            const savedHistory = this.context.globalState.get<CommandHistory[]>('commandHistory', []);
+            this.history = savedHistory;
+            logger.debug(`Loaded ${this.history.length} command history items`);
+        } catch (error) {
+            logger.error('Failed to load command history:', error);
+            this.history = [];
+        }
+    }
+
+    async addToHistory(original: string, corrected: string, shell: string, exitCode?: number, output?: string) {
+        try {
+            const entry: CommandHistory = {
+                original,
+                corrected,
+                timestamp: Date.now(),
+                shell,
+                exitCode,
+                output
+            };
+
+            this.history.unshift(entry);
+            
+            // 保持历史记录在限制大小内
+            if (this.history.length > CommandHistoryManager.MAX_HISTORY_SIZE) {
+                this.history = this.history.slice(0, CommandHistoryManager.MAX_HISTORY_SIZE);
+            }
+
+            await this.saveHistory();
+            logger.debug('Added new command to history:', entry);
+        } catch (error) {
+            logger.error('Failed to add command to history:', error);
+        }
+    }
+
+    private async saveHistory() {
+        try {
+            await this.context.globalState.update('commandHistory', this.history);
+            logger.debug(`Saved ${this.history.length} command history items`);
+        } catch (error) {
+            logger.error('Failed to save command history:', error);
+        }
+    }
+
+    getHistory(): CommandHistory[] {
+        return [...this.history];
+    }
+
+    async clearHistory() {
+        this.history = [];
+        await this.saveHistory();
+        logger.info('Command history cleared');
+    }
+}
+
+class TerminalManager {
+    private static instance: TerminalManager;
+    private terminalDataListener: vscode.Disposable | undefined;
+    private terminals: Map<string, TerminalCommand> = new Map();
+    private commandHistoryManager: CommandHistoryManager;
+
+    private constructor(context: vscode.ExtensionContext) {
+        this.commandHistoryManager = new CommandHistoryManager(context);
+        this.setupTerminalListener();
+        this.registerTerminalCloseListener();
+    }
+
+    static getInstance(context: vscode.ExtensionContext): TerminalManager {
+        if (!TerminalManager.instance) {
+            TerminalManager.instance = new TerminalManager(context);
+        }
+        return TerminalManager.instance;
+    }
+
+    private setupTerminalListener() {
+        try {
+            if (this.terminalDataListener) {
+                this.terminalDataListener.dispose();
+            }
+
+            this.terminalDataListener = vscode.window.onDidWriteTerminalData(async e => {
+                try {
+                    const terminalId = await e.terminal.processId;
+                    if (!terminalId) {
+                        logger.warn('Unable to get terminal process ID');
+                        return;
+                    }
+
+                    const terminalKey = terminalId.toString();
+                    const currentCommand = this.terminals.get(terminalKey);
+
+                    if (currentCommand) {
+                        // 追加输出数据
+                        currentCommand.output += e.data;
+                        this.terminals.set(terminalKey, currentCommand);
+                        logger.debug(`Updated terminal output for ${terminalKey}`);
+                    }
+                } catch (error) {
+                    logger.error('Error in terminal data listener:', error);
+                }
+            });
+
+            logger.info('Terminal listener setup completed');
+        } catch (error) {
+            logger.error('Failed to setup terminal listener:', error);
+            throw createError('Failed to setup terminal listener', ErrorType.unknown);
+        }
+    }
+
+    private registerTerminalCloseListener() {
+        vscode.window.onDidCloseTerminal(terminal => {
+            terminal.processId.then(id => {
+                if (id) {
+                    this.terminals.delete(id.toString());
+                    logger.debug(`Terminal ${id} closed and removed from tracking`);
+                }
+            });
+        });
+    }
+
+    async addCommand(terminal: vscode.Terminal, command: string) {
+        try {
+            const terminalId = await terminal.processId;
+            if (!terminalId) {
+                throw createError('Unable to get terminal process ID', ErrorType.noTerminal);
+            }
+
+            const shell = await getShell();
+            this.terminals.set(terminalId.toString(), {
+                command,
+                output: '',
+                timestamp: Date.now(),
+                shell
+            });
+
+            logger.debug(`Added new command for terminal ${terminalId}:`, command);
+        } catch (error) {
+            logger.error('Failed to add command:', error);
+            handleError(error);
+        }
+    }
+
+    getCommand(terminalId: string): TerminalCommand | undefined {
+        return this.terminals.get(terminalId);
+    }
+
+    getCommandHistoryManager(): CommandHistoryManager {
+        return this.commandHistoryManager;
+    }
+}
+
 enum ErrorType {
     noTerminal = 'noTerminal',
     executionError = 'executionError',
     noCorrection = 'noCorrection',
     invalidShell = 'invalidShell',
+    pythonError = 'pythonError',
+    environmentError = 'environmentError',
     unknown = 'unknown'
 }
 
@@ -68,6 +357,7 @@ function createError(message: string, type: ErrorType, stderr?: string): TheFuck
 
 function handleError(error: unknown) {
     const theFuckError = error as TheFuckError;
+    logger.error('Error occurred:', error);
     
     switch (theFuckError.type) {
         case ErrorType.noTerminal:
@@ -83,9 +373,15 @@ function handleError(error: unknown) {
         case ErrorType.invalidShell:
             vscode.window.showErrorMessage('Unsupported shell type. Please use PowerShell, CMD, Bash, or ZSH.');
             break;
+        case ErrorType.pythonError:
+            vscode.window.showErrorMessage('Python execution error. Please check your Python installation.');
+            break;
+        case ErrorType.environmentError:
+            vscode.window.showErrorMessage('Environment configuration error. Please check your setup.');
+            break;
         default:
             vscode.window.showErrorMessage(`An unexpected error occurred: ${theFuckError.message}`);
-            console.error('Unexpected error:', theFuckError);
+            logger.error('Unexpected error:', theFuckError);
     }
 }
 
@@ -96,7 +392,7 @@ export async function activate(context: vscode.ExtensionContext) {
     EnhancedCorrection.initialize(context);
 
     // 设置内置 Python 环境路径
-    pythonPath = path.join(context.extensionPath, 'python_env', process.platform === 'win32' ? 'Scripts\\python.exe' : 'bin/python');
+    const pythonPath = ConfigManager.getInstance().getPythonPath() || path.join(context.extensionPath, 'python_env', process.platform === 'win32' ? 'Scripts\\python.exe' : 'bin/python');
 
     // 确保 Python 可执行文件存在
     if (!fs.existsSync(pythonPath)) {
@@ -104,18 +400,10 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    // 从存储中加载历史记录
-    commandHistory = context.globalState.get<CommandHistory[]>('commandHistory', []);
-
-    // 设置终端监听器
-    await setupTerminalListener();
-
     // 注册命令
     context.subscriptions.push(
         vscode.commands.registerCommand('vscode-thefuck.correctCommand', () => runTheFuck(context)),
         vscode.commands.registerCommand('vscode-thefuck.showHistory', () => showHistory(context)),
-        // 如果 terminalDataListener 存在，也将其添加到 subscriptions
-        ...(terminalDataListener ? [terminalDataListener] : []),
         vscode.commands.registerCommand('vscode-thefuck.showDiff', () => showDiff(lastCommand, ''))
     );
 
@@ -126,91 +414,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    if (terminalDataListener) {
-        terminalDataListener.dispose();
-    }
-}
-
-async function setupTerminalListener() {
-    // 清理旧的监听器
-    if (terminalDataListener) {
-        terminalDataListener.dispose();
-    }
-    
-    // 监听通过 sendSequence 发送的命令
-    terminalDataListener = vscode.commands.registerCommand('workbench.action.terminal.sendSequence', async (args: { text: string }) => {
-        if (args && typeof args.text === 'string') {
-            const cleanedCommand = args.text.trim().replace(/\n/g, ''); // 移除换行符
-            if (cleanedCommand) {
-                lastCommand = cleanedCommand;
-                const terminal = vscode.window.activeTerminal;
-                const terminalId = await terminal?.processId;
-                if (terminalId) {
-                    terminalCommands.set(terminalId.toString(), {
-                        command: lastCommand,
-                        output: '',
-                        timestamp: Date.now(),
-                        shell: await getShell()
-                    });
-                }
-            }
-        }
-    });
-
-    // 监听终端关闭事件，移除对应的命令记录
-    vscode.window.onDidCloseTerminal(terminal => {
-        terminal.processId.then(terminalId => {
-            if (terminalId) {
-                terminalCommands.delete(terminalId.toString());
-            }
-        });
-    });
-
-    // 定期清理过期的命令记录（超过30分钟的记录）
-    setInterval(() => {
-        const now = Date.now();
-        const expirationTime = 30 * 60 * 1000; // 30分钟
-        for (const [terminalId, command] of terminalCommands.entries()) {
-            if (now - command.timestamp > expirationTime) {
-                terminalCommands.delete(terminalId);
-            }
-        }
-    }, 5 * 60 * 1000); // 每5分钟检查一次
-}
-
-async function showCommandHistory() {
-    if (commandHistory.length === 0) {
-        vscode.window.showInformationMessage('没有命令历史记录');
-        return;
-    }
-
-    const items = commandHistory.map(hist => ({
-        label: `${hist.original} → ${hist.corrected}`,
-        description: new Date(hist.timestamp).toLocaleString(),
-        original: hist.original,
-        corrected: hist.corrected
-    }));
-
-    const selected = await vscode.window.showQuickPick(items, {
-        placeHolder: '选择要重用的命令',
-        matchOnDescription: true
-    });
-
-    if (selected) {
-        const terminal = vscode.window.activeTerminal;
-        if (terminal) {
-            const action = await vscode.window.showQuickPick(
-                ['使用原始命令', '使用修正后的命令'],
-                { placeHolder: '选择要使用的命令版本' }
-            );
-
-            if (action === '使用原始命令') {
-                terminal.sendText(selected.original);
-            } else if (action === '使用修正后的命令') {
-                terminal.sendText(selected.corrected);
-            }
-        }
-    }
+    // Nothing to do here
 }
 
 async function getShell(): Promise<string> {
@@ -254,92 +458,107 @@ async function getShell(): Promise<string> {
     return process.platform === 'win32' ? 'powershell' : 'bash';
 }
 
-async function addToHistory(original: string, corrected: string, context: vscode.ExtensionContext) {
-    const historyItem: CommandHistory = {
-        original,
-        corrected,
-        timestamp: Date.now()
-    };
-
-    commandHistory.unshift(historyItem);
-    if (commandHistory.length > MAX_HISTORY_SIZE) {
-        commandHistory.pop();
-    }
-
-    await context.globalState.update('commandHistory', commandHistory);
-}
-
-async function runTheFuck(context: vscode.ExtensionContext) {
+async function runTheFuck(context: vscode.ExtensionContext): Promise<string> {
     try {
-        if (!lastCommand) {
-            throw createError('No previous command found to correct', ErrorType.noCorrection);
-        }
-
+        logger.debug('Starting command correction...');
         const terminal = vscode.window.activeTerminal;
         if (!terminal) {
             throw createError('No active terminal found', ErrorType.noTerminal);
         }
 
-        const config = vscode.workspace.getConfiguration('vscode-thefuck');
-        const customTheFuckPath = config.get<string>('thefuckPath');
-        const shell = await getShell();
-
-        // 使用用户配置的 thefuckPath 或默认的 thefuck
-        const thefuckPath = customTheFuckPath || 'thefuck';
-
-        // 安全地构造命令参数
-        const args = ['--yeah'];
-        if (lastCommand) {
-            args.unshift(lastCommand);
+        const terminalId = await terminal.processId;
+        if (!terminalId) {
+            throw createError('Unable to get terminal process ID', ErrorType.noTerminal);
         }
 
-        let execOptions: any = {
-            env: { ...process.env, pythonIoEncoding: 'utf-8' }
-        };
-
-        // 根据 shell 类型设置执行环境
-        switch (shell) {
-            case 'powershell':
-                execOptions.shell = 'powershell.exe';
-                break;
-            case 'cmd':
-                execOptions.shell = 'cmd.exe';
-                break;
-            case 'bash':
-            case 'zsh':
-                execOptions.shell = true;
-                break;
-            default:
-                throw createError(`Unsupported shell type: ${shell}`, ErrorType.invalidShell);
+        const terminalCommand = TerminalManager.getInstance(context).getCommand(terminalId.toString());
+        if (!terminalCommand) {
+            throw createError('No command history found', ErrorType.noCorrection);
         }
 
-        try {
-            const { stdout, stderr } = await execAsync(thefuckPath, args, execOptions);
+        // 检查命令是否为空或只包含空白字符
+        if (!terminalCommand.command.trim()) {
+            throw createError('Empty command', ErrorType.noCorrection);
+        }
 
-            if (stderr) {
-                throw createError('Command execution failed', ErrorType.executionError, stderr);
+        logger.debug('Original command:', terminalCommand.command);
+
+        // 使用重试机制执行命令
+        const maxRetries = ConfigManager.getInstance().getRetryAttempts();
+        let lastError: Error | null = null;
+        
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const correctedCommand = await executePythonCorrection(terminalCommand.command, terminalCommand.output);
+                if (correctedCommand && correctedCommand !== terminalCommand.command) {
+                    logger.info('Command corrected:', { original: terminalCommand.command, corrected: correctedCommand });
+                    TerminalManager.getInstance(context).getCommandHistoryManager().addToHistory(terminalCommand.command, correctedCommand, terminalCommand.shell);
+                    return correctedCommand;
+                }
+            } catch (error) {
+                lastError = error as Error;
+                logger.warn(`Retry ${i + 1}/${maxRetries} failed:`, error);
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 指数退避
+                continue;
             }
-
-            const correctedCommand = stdout.trim();
-            if (!correctedCommand) {
-                throw createError('No correction found', ErrorType.noCorrection);
-            }
-
-            // 添加到历史记录
-            await addToHistory(lastCommand, correctedCommand, context);
-
-            // 在终端中执行纠正后的命令
-            terminal.sendText(correctedCommand);
-            vscode.window.showInformationMessage(`Corrected: ${correctedCommand}`);
-        } catch (execError) {
-            throw createError(
-                'Failed to execute thefuck',
-                ErrorType.executionError,
-                (execError as Error).message
-            );
         }
+
+        if (lastError) {
+            throw lastError;
+        }
+
+        throw createError('No correction available', ErrorType.noCorrection);
     } catch (error) {
         handleError(error);
+        return '';
+    }
+}
+
+async function executePythonCorrection(command: string, output: string): Promise<string> {
+    try {
+        logger.debug('Executing Python correction...');
+        const pythonScript = `
+from thefuck.main import Command, run_alias
+from thefuck.specific.windows import Powershell
+
+command = Command('${command.replace(/'/g, "\\'")}', '${output.replace(/'/g, "\\'")}')
+corrected = run_alias(command, Powershell)
+print(corrected)
+        `.trim();
+
+        const tempFile = path.join(os.tmpdir(), `thefuck_${Date.now()}.py`);
+        
+        try {
+            // 写入临时文件
+            await fs.promises.writeFile(tempFile, pythonScript, 'utf8');
+            logger.debug('Created temporary Python script:', tempFile);
+
+            // 执行 Python 脚本
+            const { stdout, stderr } = await execAsync(pythonPath, [tempFile], {
+                env: {
+                    ...process.env,
+                    LANG: 'en_US.UTF-8',
+                    PYTHONIOENCODING: 'utf-8'
+                }
+            });
+
+            if (stderr) {
+                logger.warn('Python script stderr:', stderr);
+            }
+
+            return stdout.trim();
+        } finally {
+            // 清理临时文件
+            try {
+                await fs.promises.unlink(tempFile);
+                logger.debug('Cleaned up temporary Python script');
+            } catch (error) {
+                logger.warn('Failed to clean up temporary file:', error);
+            }
+        }
+    } catch (error) {
+        logger.error('Python correction failed:', error);
+        throw createError('Failed to execute Python correction', ErrorType.pythonError, (error as Error).message);
     }
 }
 
@@ -392,12 +611,15 @@ async function showDiff(original: string, corrected: string) {
 }
 
 async function showHistory(context: vscode.ExtensionContext) {
-    if (commandHistory.length === 0) {
+    const commandHistoryManager = TerminalManager.getInstance(context).getCommandHistoryManager();
+    const history = commandHistoryManager.getHistory();
+
+    if (history.length === 0) {
         vscode.window.showInformationMessage('没有命令历史记录');
         return;
     }
 
-    const items = commandHistory.map(hist => ({
+    const items = history.map(hist => ({
         label: `${hist.original} → ${hist.corrected}`,
         description: new Date(hist.timestamp).toLocaleString(),
         original: hist.original,
