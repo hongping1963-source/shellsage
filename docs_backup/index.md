@@ -5,41 +5,7 @@ title: ShellSage - Your Intelligent Terminal Companion
 
 # Welcome to ShellSage
 
-ShellSage is your intelligent terminal companion in VS Code, designed to enhance your command-line experience with AI-powered suggestions and corrections.
-
-## Features
-
-- **Smart Command Correction**: Automatically detects and suggests fixes for command-line errors
-- **Context-Aware Suggestions**: Provides intelligent suggestions based on your command history
-- **Easy Integration**: Seamlessly integrates with VS Code's terminal
-- **Customizable Rules**: Define your own correction rules and preferences
-
-[Get Started →](/docs/installation/)
-
-## Latest Updates
-
-{% for post in site.posts limit:3 %}
-- [{{ post.title }}]({{ post.url }}) - {{ post.date | date: "%B %d, %Y" }}
-{% endfor %}
-
-[View All Updates →](/blog/)
-
-## Documentation
-
-Browse our comprehensive documentation to learn more about ShellSage:
-
-- [Installation Guide](/docs/installation/)
-- [User Guide](/docs/user-guide/)
-- [Configuration](/docs/configuration/)
-- [FAQ](/docs/faq/)
-
-## Contributing
-
-We welcome contributions! Check out our [contributing guidelines](/docs/contributing/) to get started.
-
-## Support
-
-Need help? Check our [FAQ](/docs/faq/) or [open an issue]({{ site.github.repository_url }}/issues) on GitHub.
+ShellSage is your intelligent terminal companion in VS Code, designed to make your command-line experience smoother and more productive. Powered by advanced AI technology, it helps you catch errors, learn best practices, and become more efficient with the command line.
 
 ## 🚀 Key Features
 
