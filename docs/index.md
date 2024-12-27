@@ -1,6 +1,13 @@
+---
+layout: default
+title: Welcome to ShellSage
+---
+
 # Welcome to ShellSage
 
 ShellSage is your intelligent terminal companion in VS Code, designed to make your command-line experience smoother and more productive.
+
+[Visit Our Interactive Demo](welcome.html){: .btn .btn-primary }
 
 ## Features
 
@@ -31,4 +38,4 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING_GUIDE
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see the [LICENSE](LICENSE) file for details.
