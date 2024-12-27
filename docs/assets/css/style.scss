@@ -1,0 +1,97 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+/* Navigation */
+.main-nav {
+  margin-top: 1rem;
+  
+  .btn {
+    margin: 0.5rem;
+  }
+}
+
+/* Documentation */
+.doc-wrapper {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.sidebar {
+  flex: 0 0 250px;
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  li {
+    margin: 0.5rem 0;
+  }
+  
+  a {
+    color: $body-text-color;
+    text-decoration: none;
+    
+    &:hover {
+      color: $body-link-color;
+    }
+    
+    &.active {
+      color: $body-link-color;
+      font-weight: bold;
+    }
+  }
+}
+
+.doc-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Blog Posts */
+.post {
+  margin-bottom: 3rem;
+}
+
+.post-meta {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.post-content {
+  margin-top: 2rem;
+}
+
+/* Code Blocks */
+pre {
+  background-color: #f8f8f8;
+  border-radius: 3px;
+  font-size: 85%;
+  line-height: 1.45;
+  overflow: auto;
+  padding: 16px;
+}
+
+code {
+  background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: 0.2em 0.4em;
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 800px) {
+  .doc-wrapper {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    flex: none;
+    margin-bottom: 2rem;
+  }
+}

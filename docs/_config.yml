@@ -1,0 +1,70 @@
+theme: jekyll-theme-cayman
+title: ShellSage
+description: Your intelligent terminal companion in VS Code
+show_downloads: true
+github:
+  repository_url: https://github.com/hongping1963-source/shellsage
+  zip_url: https://github.com/hongping1963-source/shellsage/archive/main.zip
+  tar_url: https://github.com/hongping1963-source/shellsage/archive/main.tar.gz
+
+# Navigation
+navigation:
+  - title: Home
+    url: /
+  - title: Documentation
+    url: /docs/
+  - title: Installation
+    url: /docs/installation/
+  - title: Features
+    url: /docs/features/
+  - title: Blog
+    url: /blog/
+  - title: FAQ
+    url: /docs/faq/
+  - title: Contributing
+    url: /docs/contributing/
+
+# Build settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path/
+  blog:
+    output: true
+    permalink: /blog/:year/:month/:day/:title/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: "doc"
+      sidebar: true
+  - scope:
+      path: ""
+      type: "blog"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+# Site settings
+url: "https://hongping1963-source.github.io"
+baseurl: "/shellsage"
+repository: hongping1963-source/shellsage
