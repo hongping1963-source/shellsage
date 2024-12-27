@@ -6,3 +6,6 @@ github:
   repository_url: https://github.com/hongping1963-source/shellsage
   zip_url: https://github.com/hongping1963-source/shellsage/archive/main.zip
   tar_url: https://github.com/hongping1963-source/shellsage/archive/main.tar.gz
+baseurl: "/shellsage"
+url: "https://hongping1963-source.github.io"
+markdown: kramdown

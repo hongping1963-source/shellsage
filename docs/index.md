@@ -17,17 +17,17 @@ ShellSage is your intelligent terminal companion in VS Code, designed to make yo
 
 ## Documentation
 
-- [User Guide](docs/USER_GUIDE.md)
-- [Contributing Guide](docs/CONTRIBUTING_GUIDE.md)
-- [FAQ](docs/FAQ.md)
+- [User Guide](USER_GUIDE.md)
+- [Contributing Guide](CONTRIBUTING_GUIDE.md)
+- [FAQ](FAQ.md)
 
 ## Project Status
 
-Check out our [Project Status](docs/PROJECT_STATUS.md) page to see what features are currently implemented and what's coming next!
+Check out our [Project Status](PROJECT_STATUS.md) page to see what features are currently implemented and what's coming next!
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING_GUIDE.md) for details.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING_GUIDE.md) for details.
 
 ## License
 
