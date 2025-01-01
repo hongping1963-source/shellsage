@@ -5,11 +5,11 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 // Tasks integration
-export class TaskIntegration {
-    public static register(context: vscode.ExtensionContext): void {
-        if (!context) {
-            throw new Error('Context is required');
-        }
+export class TaskIntegration implements vscode.Disposable {
+    private disposables: vscode.Disposable[] = [];
+
+    constructor() {
+        // Register task provider
         const taskProvider = vscode.tasks.registerTaskProvider('thefuck', {
             provideTasks: () => {
                 // 创建多个任务选项
@@ -31,20 +31,31 @@ export class TaskIntegration {
                 ];
                 return tasks;
             },
-            resolveTask(_task: vscode.Task): vscode.Task | undefined {
+            resolveTask: (_task: vscode.Task) => {
                 return undefined;
             }
         });
-        context.subscriptions.push(taskProvider);
+        this.disposables.push(taskProvider);
     }
-}
 
-// Debugger integration
-export class DebuggerIntegration {
+    dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+    }
+
     public static register(context: vscode.ExtensionContext): void {
         if (!context) {
             throw new Error('Context is required');
         }
+        const taskIntegration = new TaskIntegration();
+        context.subscriptions.push(taskIntegration);
+    }
+}
+
+// Debugger integration
+export class DebuggerIntegration implements vscode.Disposable {
+    private disposables: vscode.Disposable[] = [];
+
+    constructor() {
         // 监听调试会话事件
         const debugListener = vscode.debug.onDidTerminateDebugSession(async (session) => {
             if (session.configuration.type === 'shell' && session.configuration.exitCode !== 0) {
@@ -72,7 +83,11 @@ export class DebuggerIntegration {
             console.log('Debug session started:', session.type);
         });
 
-        context.subscriptions.push(debugListener, debugStartListener);
+        this.disposables.push(debugListener, debugStartListener);
+    }
+
+    dispose(): void {
+        this.disposables.forEach(d => d.dispose());
     }
 
     private static async addToDebugConfig(command: string) {
@@ -109,14 +124,21 @@ export class DebuggerIntegration {
             vscode.window.showErrorMessage('无法更新调试配置文件');
         }
     }
-}
 
-// SCM integration
-export class SCMIntegration {
     public static register(context: vscode.ExtensionContext): void {
         if (!context) {
             throw new Error('Context is required');
         }
+        const debuggerIntegration = new DebuggerIntegration();
+        context.subscriptions.push(debuggerIntegration);
+    }
+}
+
+// SCM integration
+export class SCMIntegration implements vscode.Disposable {
+    private disposables: vscode.Disposable[] = [];
+
+    constructor() {
         // 监听 Git 命令执行
         const gitCommandHandler = vscode.commands.registerCommand('git.command', async (args) => {
             try {
@@ -150,7 +172,11 @@ export class SCMIntegration {
         statusBarItem.command = 'vscode-thefuck.correctCommand';
         statusBarItem.show();
 
-        context.subscriptions.push(gitCommandHandler, statusBarItem);
+        this.disposables.push(gitCommandHandler, statusBarItem);
+    }
+
+    dispose(): void {
+        this.disposables.forEach(d => d.dispose());
     }
 
     private static async addGitAlias(originalCommand: string, correctedCommand: string) {
@@ -164,5 +190,13 @@ export class SCMIntegration {
             console.error('Error adding git alias:', error);
             vscode.window.showErrorMessage('无法添加 Git 别名');
         }
+    }
+
+    public static register(context: vscode.ExtensionContext): void {
+        if (!context) {
+            throw new Error('Context is required');
+        }
+        const scmIntegration = new SCMIntegration();
+        context.subscriptions.push(scmIntegration);
     }
 }
