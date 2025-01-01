@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 import { diffChars, Change } from 'diff';
 import { TaskIntegration, DebuggerIntegration, SCMIntegration } from './integrations';
 import { EnhancedCorrection } from './features/enhancedCorrection';
+import { DeepSeekIntegration } from './features/deepseekIntegration';
 
 // 增加日志记录工具
 interface ExtensionConfig {
@@ -386,31 +387,53 @@ function handleError(error: unknown) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-    console.log('VS Code TheFuck extension is now active');
+    try {
+        logger.debug('Starting ShellSage extension...');
+        
+        // Initialize DeepSeek integration
+        const deepseekIntegration = DeepSeekIntegration.getInstance(context);
+        deepseekIntegration.register(context);
 
-    // 初始化增强功能
-    EnhancedCorrection.initialize(context);
+        // Register other commands
+        const correctCommand = vscode.commands.registerCommand('shellsage.correctCommand', async () => {
+            try {
+                const correctedCommand = await runTheFuck(context);
+                if (correctedCommand) {
+                    const terminal = vscode.window.activeTerminal;
+                    if (terminal) {
+                        terminal.sendText(correctedCommand);
+                    }
+                }
+            } catch (error) {
+                handleError(error);
+            }
+        });
 
-    // 设置内置 Python 环境路径
-    const pythonPath = ConfigManager.getInstance().getPythonPath() || path.join(context.extensionPath, 'python_env', process.platform === 'win32' ? 'Scripts\\python.exe' : 'bin/python');
+        const historyCommand = vscode.commands.registerCommand('shellsage.showHistory', () => {
+            showHistory(context);
+        });
 
-    // 确保 Python 可执行文件存在
-    if (!fs.existsSync(pythonPath)) {
-        vscode.window.showErrorMessage('内置 Python 环境未找到，扩展可能无法正常工作');
-        return;
+        // Register command disposables
+        context.subscriptions.push(correctCommand, historyCommand);
+
+        // Initialize terminal manager
+        TerminalManager.getInstance(context);
+
+        // Initialize integrations
+        const taskIntegration = new TaskIntegration();
+        const debuggerIntegration = new DebuggerIntegration();
+        const scmIntegration = new SCMIntegration();
+
+        context.subscriptions.push(
+            taskIntegration,
+            debuggerIntegration,
+            scmIntegration
+        );
+
+        logger.info('ShellSage extension activated successfully');
+    } catch (error) {
+        handleError(error);
     }
-
-    // 注册命令
-    context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-thefuck.correctCommand', () => runTheFuck(context)),
-        vscode.commands.registerCommand('vscode-thefuck.showHistory', () => showHistory(context)),
-        vscode.commands.registerCommand('vscode-thefuck.showDiff', () => showDiff(lastCommand, ''))
-    );
-
-    // 注册集成功能
-    TaskIntegration.registerTaskProvider(context);
-    DebuggerIntegration.registerDebuggerIntegration(context);
-    SCMIntegration.registerSCMIntegration(context);
 }
 
 export function deactivate() {
