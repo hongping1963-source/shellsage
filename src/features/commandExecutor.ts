@@ -1,143 +1,90 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
-import { promisify } from 'util';
 import { exec } from 'child_process';
-import { logger } from '../utils/logger';
+import { promisify } from 'util';
+import { Logger } from '../utils/logger';
 import { ConfigManager } from '../utils/config';
-import { createError, ErrorType } from '../utils/error';
+import { ErrorType, createError } from '../utils/error';
 
 const execAsync = promisify(exec);
+const logger = Logger.getInstance();
+const config = ConfigManager.getInstance();
+
+export interface ExecutionResult {
+    stdout: string;
+    stderr: string;
+    code: number;
+}
 
 export class CommandExecutor {
     private static instance: CommandExecutor;
-    private commandQueue: Array<{
-        command: string;
-        resolve: (value: string) => void;
-        reject: (error: Error) => void;
-    }> = [];
-    private isProcessing = false;
 
-    private constructor() {
-        this.processQueue();
-    }
+    private constructor() {}
 
-    static getInstance(): CommandExecutor {
-        if (!CommandExecutor.instance) {
-            CommandExecutor.instance = new CommandExecutor();
+    public static getInstance(): CommandExecutor {
+        if (!this.instance) {
+            this.instance = new CommandExecutor();
         }
-        return CommandExecutor.instance;
+        return this.instance;
     }
 
-    async executeCommand(command: string, output: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            this.commandQueue.push({ command, resolve, reject });
-            if (!this.isProcessing) {
-                this.processQueue();
-            }
-        });
-    }
-
-    private async processQueue() {
-        if (this.isProcessing || this.commandQueue.length === 0) {
-            return;
-        }
-
-        this.isProcessing = true;
-        const configManager = ConfigManager.getInstance();
-        const commandTimeout = configManager.getCommandTimeout();
-
-        while (this.commandQueue.length > 0) {
-            const current = this.commandQueue.shift()!;
-            try {
-                const result = await Promise.race([
-                    this.executePythonCorrection(current.command, ''),
-                    new Promise<string>((_, reject) => 
-                        setTimeout(() => reject(new Error('Command execution timeout')), commandTimeout)
-                    )
-                ]);
-                current.resolve(result);
-            } catch (error) {
-                current.reject(error as Error);
-            }
-        }
-
-        this.isProcessing = false;
-    }
-
-    private async executePythonCorrection(command: string, output: string): Promise<string> {
-        const tempFile = path.join(os.tmpdir(), `thefuck_${Date.now()}.py`);
-        const configManager = ConfigManager.getInstance();
-        const pythonPath = configManager.getPythonPath();
-
+    public async execute(command: string, shell?: string): Promise<ExecutionResult> {
         try {
-            // 优化 Python 脚本
-            const pythonScript = `
-import sys
-from thefuck.main import Command, run_alias
-from thefuck.specific.windows import Powershell
+            logger.debug(`Executing command: ${command}`);
 
-def main():
-    try:
-        command = Command('${command.replace(/'/g, "\\'")}', '${output.replace(/'/g, "\\'")}')
-        corrected = run_alias(command, Powershell)
-        print(corrected)
-        sys.exit(0)
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+            const options = {
+                shell: shell || await this.getDefaultShell(),
+                timeout: 10000, // Default timeout of 10 seconds
+                maxBuffer: 1024 * 1024 // 1MB buffer
+            };
 
-if __name__ == '__main__':
-    main()
-`.trim();
+            const { stdout, stderr } = await execAsync(command, options);
+            
+            return {
+                stdout: stdout.trim(),
+                stderr: stderr.trim(),
+                code: 0
+            };
+        } catch (error: any) {
+            logger.error('Command execution failed:', error);
 
-            // 使用 Promise.all 并行处理文件操作
-            await Promise.all([
-                fs.promises.writeFile(tempFile, pythonScript, 'utf8'),
-                this.checkPythonEnvironment(pythonPath)
-            ]);
-
-            logger.debug('Created temporary Python script:', tempFile);
-
-            // 执行 Python 脚本
-            const { stdout, stderr } = await execAsync(`"${pythonPath}" "${tempFile}"`, {
-                env: {
-                    ...process.env,
-                    LANG: 'en_US.UTF-8',
-                    PYTHONIOENCODING: 'utf-8',
-                    PYTHONOPTIMIZE: '1'  // 启用 Python 优化
-                },
-                timeout: configManager.getCommandTimeout()
-            });
-
-            if (stderr) {
-                logger.warn('Python script stderr:', stderr);
+            if (error.code === 'ENOENT') {
+                throw createError(
+                    'Shell executable not found',
+                    ErrorType.CONFIGURATION,
+                    error
+                );
             }
 
-            return stdout.trim();
-        } catch (error) {
-            logger.error('Python correction failed:', error);
-            throw createError('Failed to execute Python correction', ErrorType.pythonError, (error as Error).message);
-        } finally {
-            // 异步清理临时文件
-            fs.promises.unlink(tempFile).catch(error => {
-                logger.warn('Failed to clean up temporary file:', error);
-            });
+            if (error.code === 'ETIMEDOUT') {
+                throw createError(
+                    'Command execution timed out',
+                    ErrorType.COMMAND_EXECUTION,
+                    error
+                );
+            }
+
+            return {
+                stdout: '',
+                stderr: error.message,
+                code: error.code || 1
+            };
         }
     }
 
-    private async checkPythonEnvironment(pythonPath: string | undefined): Promise<void> {
-        if (!pythonPath) {
-            throw createError('Python path not configured', ErrorType.environmentError);
+    private async getDefaultShell(): Promise<string> {
+        const terminal = vscode.window.activeTerminal;
+        if (terminal) {
+            return terminal.name;
         }
 
-        try {
-            await execAsync(`"${pythonPath}" -c "import thefuck"`, {
-                timeout: 5000
-            });
-        } catch (error) {
-            throw createError('Python environment check failed', ErrorType.environmentError, (error as Error).message);
+        // Default shells based on platform
+        switch (process.platform) {
+            case 'win32':
+                return 'powershell.exe';
+            case 'darwin':
+                return '/bin/zsh';
+            default:
+                return '/bin/bash';
         }
     }
 }

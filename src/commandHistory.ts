@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 import { Configuration } from './configuration';
+import { Logger } from './utils/logger';
+import { CommandHistory } from './types';
+
+const logger = Logger.getInstance();
 
 interface CommandHistoryItem {
     command: string;
@@ -324,5 +328,62 @@ export class CommandHistory {
             }))
             .sort((a, b) => b.frequency - a.frequency)
             .slice(0, 5);
+    }
+}
+
+export class CommandHistoryManager {
+    private history: CommandHistory[] = [];
+
+    constructor(private context: vscode.ExtensionContext) {
+        this.loadHistory();
+    }
+
+    private loadHistory() {
+        try {
+            const savedHistory = this.context.globalState.get<CommandHistory[]>('commandHistory', []);
+            this.history = savedHistory;
+            logger.debug(`Loaded ${this.history.length} command history items`);
+        } catch (error) {
+            logger.error('Failed to load command history:', error);
+            this.history = [];
+        }
+    }
+
+    async addToHistory(original: string, corrected: string, shell: string, exitCode?: number, output?: string) {
+        try {
+            const entry: CommandHistory = {
+                original,
+                corrected,
+                timestamp: Date.now(),
+                shell,
+                exitCode,
+                output
+            };
+
+            this.history.unshift(entry);
+            await this.saveHistory();
+            logger.debug('Added new command to history:', entry);
+        } catch (error) {
+            logger.error('Failed to add command to history:', error);
+        }
+    }
+
+    private async saveHistory() {
+        try {
+            await this.context.globalState.update('commandHistory', this.history);
+            logger.debug(`Saved ${this.history.length} command history items`);
+        } catch (error) {
+            logger.error('Failed to save command history:', error);
+        }
+    }
+
+    getHistory(): CommandHistory[] {
+        return [...this.history];
+    }
+
+    async clearHistory() {
+        this.history = [];
+        await this.saveHistory();
+        logger.info('Command history cleared');
     }
 }

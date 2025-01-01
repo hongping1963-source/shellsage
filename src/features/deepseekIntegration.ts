@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
+import { Logger } from '../utils/logger';
+import { CorrectionResult } from '../types';
+
+const logger = Logger.getInstance();
 
 export class DeepSeekIntegration {
     private static readonly DEEPSEEK_API_URL = 'https://api.deepseek.ai/v1';
@@ -43,12 +47,78 @@ export class DeepSeekIntegration {
             this.showAnalysisResults(analysis, command);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error occurred';
+            logger.error('Failed to analyze command:', error);
             vscode.window.showErrorMessage(`Failed to analyze command: ${message}`);
+        }
+    }
+
+    public async correctCommand(command: string): Promise<CorrectionResult> {
+        try {
+            logger.debug('Requesting command correction from DeepSeek API:', command);
+            
+            const response = await axios.post(
+                `${DeepSeekIntegration.DEEPSEEK_API_URL}/chat/completions`,
+                {
+                    model: 'deepseek-chat',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are an expert in shell commands. Your task is to correct any errors in the provided command and explain the correction.'
+                        },
+                        {
+                            role: 'user',
+                            content: `Correct this command if needed: ${command}\n\nProvide the correction and explanation in this format:\nCommand: <corrected_command>\nConfidence: <0-1>\nExplanation: <why_corrected>`
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 500
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            const content = response.data.choices[0]?.message?.content;
+            if (!content) {
+                throw new Error('No correction available from API');
+            }
+
+            // Parse the response
+            const commandMatch = content.match(/Command: (.+)/);
+            const confidenceMatch = content.match(/Confidence: (0\.\d+|1\.0|1)/);
+            const explanationMatch = content.match(/Explanation: (.+)/);
+
+            if (!commandMatch || !confidenceMatch || !explanationMatch) {
+                throw new Error('Invalid response format from API');
+            }
+
+            return {
+                command: command,
+                corrected: commandMatch[1].trim(),
+                confidence: parseFloat(confidenceMatch[1]),
+                explanation: explanationMatch[1].trim()
+            };
+        } catch (err) {
+            const error = err as Error;
+            logger.error('Command correction failed:', error);
+            
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 401) {
+                    throw new Error('Invalid API key. Please check your DeepSeek API key configuration.');
+                }
+                throw new Error(`DeepSeek API error: ${error.response?.data?.error?.message || error.message}`);
+            }
+            throw error;
         }
     }
 
     private async getCommandAnalysis(command: string): Promise<any> {
         try {
+            logger.debug('Requesting command analysis from DeepSeek API:', command);
+            
             const response = await axios.post(
                 `${DeepSeekIntegration.DEEPSEEK_API_URL}/chat/completions`,
                 {
@@ -77,6 +147,8 @@ export class DeepSeekIntegration {
             return response.data;
         } catch (err) {
             const error = err as Error;
+            logger.error('Command analysis failed:', error);
+            
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 401) {
                     throw new Error('Invalid API key. Please check your DeepSeek API key configuration.');

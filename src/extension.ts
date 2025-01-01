@@ -2,12 +2,16 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { promisify } from 'util';
 import { exec } from 'child_process';
+import { promisify } from 'util';
 import { diffChars, Change } from 'diff';
 import { TaskIntegration, DebuggerIntegration, SCMIntegration } from './integrations';
-import { EnhancedCorrection } from './features/enhancedCorrection';
 import { DeepSeekIntegration } from './features/deepseekIntegration';
+import { Logger } from './utils/logger';
+import { CommandHistory, TerminalCommand } from './types';
+
+const logger = Logger.getInstance();
+const execAsync = promisify(exec);
 
 // 增加日志记录工具
 interface ExtensionConfig {
@@ -108,70 +112,6 @@ class ConfigManager {
     }
 }
 
-const logger = {
-    debug: (message: string, ...args: any[]) => {
-        if (ConfigManager.getInstance().isLoggingEnabled() && 
-            ConfigManager.getInstance().getLogLevel() === 'debug') {
-            console.debug(`[VSCode-TheFuck] ${message}`, ...args);
-        }
-    },
-    info: (message: string, ...args: any[]) => {
-        if (ConfigManager.getInstance().isLoggingEnabled() && 
-            ['debug', 'info'].includes(ConfigManager.getInstance().getLogLevel())) {
-            console.log(`[VSCode-TheFuck] ${message}`, ...args);
-        }
-    },
-    warn: (message: string, ...args: any[]) => {
-        if (ConfigManager.getInstance().isLoggingEnabled() && 
-            ['debug', 'info', 'warn'].includes(ConfigManager.getInstance().getLogLevel())) {
-            console.warn(`[VSCode-TheFuck] ${message}`, ...args);
-        }
-    },
-    error: (message: string, error?: any) => {
-        if (ConfigManager.getInstance().isLoggingEnabled()) {
-            console.error(`[VSCode-TheFuck] ${message}`, error);
-        }
-    }
-};
-
-async function execAsync(command: string, args: string[] = [], options: any = {}): Promise<{ stdout: string; stderr: string }> {
-    logger.debug(`Executing command: ${command} ${args.join(' ')}`);
-    return new Promise((resolve, reject) => {
-        const { exec } = require('child_process');
-        const cmd = `${command} ${args.join(' ')}`;
-        const startTime = Date.now();
-        
-        exec(cmd, options, (error: any, stdout: string, stderr: string) => {
-            const duration = Date.now() - startTime;
-            logger.debug(`Command execution completed in ${duration}ms`);
-            
-            if (error) {
-                logger.error('Command execution failed:', { error, stderr });
-                reject(error);
-            } else {
-                logger.debug('Command output:', { stdout, stderr });
-                resolve({ stdout, stderr });
-            }
-        });
-    });
-}
-
-interface CommandHistory {
-    original: string;
-    corrected: string;
-    timestamp: number;
-    shell: string;
-    exitCode?: number;
-    output?: string;
-}
-
-interface TerminalCommand {
-    command: string;
-    output: string;
-    timestamp: number;
-    shell: string;
-}
-
 class CommandHistoryManager {
     private static readonly MAX_HISTORY_SIZE = ConfigManager.getInstance().getMaxHistorySize();
     private history: CommandHistory[] = [];
@@ -203,7 +143,7 @@ class CommandHistoryManager {
             };
 
             this.history.unshift(entry);
-            
+
             // 保持历史记录在限制大小内
             if (this.history.length > CommandHistoryManager.MAX_HISTORY_SIZE) {
                 this.history = this.history.slice(0, CommandHistoryManager.MAX_HISTORY_SIZE);
@@ -359,7 +299,7 @@ function createError(message: string, type: ErrorType, stderr?: string): TheFuck
 function handleError(error: unknown) {
     const theFuckError = error as TheFuckError;
     logger.error('Error occurred:', error);
-    
+
     switch (theFuckError.type) {
         case ErrorType.noTerminal:
             vscode.window.showErrorMessage('No active terminal found. Please open a terminal first.');
@@ -389,10 +329,21 @@ function handleError(error: unknown) {
 export async function activate(context: vscode.ExtensionContext) {
     try {
         logger.debug('Starting ShellSage extension...');
-        
+
         // Initialize DeepSeek integration
         const deepseekIntegration = DeepSeekIntegration.getInstance(context);
         deepseekIntegration.register(context);
+
+        // Register terminal data listener
+        const terminalDataListener = vscode.window.onDidWriteTerminalData((e: vscode.TerminalDataWriteEvent) => {
+            const terminalId = e.terminal.processId?.toString() || '';
+            if (terminalId) {
+                const terminalManager = TerminalManager.getInstance(context);
+                terminalManager.addCommand(e.terminal, e.data);
+            }
+        });
+
+        context.subscriptions.push(terminalDataListener);
 
         // Register other commands
         const correctCommand = vscode.commands.registerCommand('shellsage.correctCommand', async () => {
@@ -509,7 +460,7 @@ async function runTheFuck(context: vscode.ExtensionContext): Promise<string> {
         // 使用重试机制执行命令
         const maxRetries = ConfigManager.getInstance().getRetryAttempts();
         let lastError: Error | null = null;
-        
+
         for (let i = 0; i < maxRetries; i++) {
             try {
                 const correctedCommand = await executePythonCorrection(terminalCommand.command, terminalCommand.output);
@@ -547,10 +498,10 @@ from thefuck.specific.windows import Powershell
 command = Command('${command.replace(/'/g, "\\'")}', '${output.replace(/'/g, "\\'")}')
 corrected = run_alias(command, Powershell)
 print(corrected)
-        `.trim();
+`.trim();
 
         const tempFile = path.join(os.tmpdir(), `thefuck_${Date.now()}.py`);
-        
+
         try {
             // 写入临时文件
             await fs.promises.writeFile(tempFile, pythonScript, 'utf8');
@@ -587,7 +538,7 @@ print(corrected)
 
 async function showDiff(original: string, corrected: string) {
     const diff = diffChars(original, corrected);
-    
+
     let markdownContent = '### Command Correction\n\n';
     markdownContent += 'Original command:\n```\n';
     markdownContent += original;
