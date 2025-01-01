@@ -8,12 +8,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hongping1224/shellsage"
+    "url": "https://github.com/hongping1963-source/shellsage"
   },
   "bugs": {
-    "url": "https://github.com/hongping1224/shellsage/issues"
+    "url": "https://github.com/hongping1963-source/shellsage/issues"
   },
-  "homepage": "https://github.com/hongping1224/shellsage#readme",
+  "homepage": "https://github.com/hongping1963-source/shellsage#readme",
   "categories": [
     "Other",
     "Snippets",
@@ -40,8 +40,9 @@
     "vscode": "^1.85.0"
   },
   "activationEvents": [
-    "onCommand:vscode-thefuck.correct",
-    "onCommand:vscode-thefuck.showHistory",
+    "onCommand:shellsage.analyzeCommand",
+    "onCommand:shellsage.correctCommand",
+    "onCommand:shellsage.showHistory",
     "onTerminalProfile"
   ],
   "main": "./out/extension.js",
@@ -49,45 +50,52 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-thefuck.correct",
-        "title": "TheFuck: 纠正命令",
-        "category": "TheFuck"
+        "command": "shellsage.analyzeCommand",
+        "title": "ShellSage: Analyze Command"
       },
       {
-        "command": "vscode-thefuck.showHistory",
-        "title": "TheFuck: 显示历史记录",
-        "category": "TheFuck"
+        "command": "shellsage.correctCommand",
+        "title": "ShellSage: Correct Command"
+      },
+      {
+        "command": "shellsage.showHistory",
+        "title": "ShellSage: Show Command History"
       }
     ],
     "configuration": {
-      "title": "VS Code TheFuck",
+      "title": "ShellSage",
       "properties": {
-        "vscode-thefuck.pythonPath": {
+        "shellsage.deepseekApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for DeepSeek integration"
+        },
+        "shellsage.pythonPath": {
           "type": "string",
           "default": "",
           "description": "Python 可执行文件的路径。留空使用内置 Python 环境。"
         },
-        "vscode-thefuck.thefuckPath": {
+        "shellsage.thefuckPath": {
           "type": "string",
           "default": "",
           "description": "TheFuck 可执行文件的路径。留空使用内置 TheFuck。"
         },
-        "vscode-thefuck.showDiff": {
+        "shellsage.showDiff": {
           "type": "boolean",
           "default": true,
           "description": "显示命令修改的差异。"
         },
-        "vscode-thefuck.requireConfirmation": {
+        "shellsage.requireConfirmation": {
           "type": "boolean",
           "default": true,
           "description": "执行纠正后的命令前需要确认。"
         },
-        "vscode-thefuck.enableNotifications": {
+        "shellsage.enableNotifications": {
           "type": "boolean",
           "default": true,
           "description": "启用通知提示。"
         },
-        "vscode-thefuck.historySize": {
+        "shellsage.historySize": {
           "type": "number",
           "default": 100,
           "description": "保存的历史记录数量。"
@@ -96,7 +104,7 @@
     },
     "keybindings": [
       {
-        "command": "vscode-thefuck.correct",
+        "command": "shellsage.correctCommand",
         "key": "ctrl+alt+f",
         "mac": "cmd+alt+f",
         "when": "terminalFocus"
