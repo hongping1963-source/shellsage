@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq shellcheck
+
+    - name: Run shellcheck
+      run: |
+        shellcheck src/**/*.sh
+        shellcheck tests/**/*.sh
+
+    - name: Run unit tests
+      run: |
+        for test in tests/unit/*_test.sh; do
+          bash "$test"
+        done
+
+    - name: Run integration tests
+      run: |
+        for test in tests/integration/*_test.sh; do
+          bash "$test"
+        done

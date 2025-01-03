@@ -1,0 +1,27 @@
+# ShellSage Configuration Example
+
+# History settings
+history:
+  max_size: 1000
+  file_path: ~/.shellsage_history
+  save_duplicates: false
+
+# AI integration settings
+ai:
+  provider: deepseek
+  api_key_env: DEEPSEEK_API_KEY
+  suggestion_delay: 0.5
+  max_suggestions: 5
+
+# Command settings
+commands:
+  enable_autocorrect: true
+  suggestion_threshold: 0.8
+  max_command_length: 1000
+
+# Logging settings
+logging:
+  level: info
+  file: ~/.shellsage/shellsage.log
+  max_size: 10MB
+  backup_count: 3
