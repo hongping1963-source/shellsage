@@ -170,8 +170,8 @@ npm run test:coverage
 
 ### 联系方式
 - GitHub Issues
-- Discussions
-- Email
+- GitHub Discussions
+- Email: support@shellsage.com
 
 ### 资源链接
 - [VS Code API文档](https://code.visualstudio.com/api)
