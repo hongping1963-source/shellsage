@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Copyright (c) 2025 zhanghongping (zhanghongping@gmail.com)
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+#
 
 # Command handling and history management
 # Based on the original commandHistory.ts functionality

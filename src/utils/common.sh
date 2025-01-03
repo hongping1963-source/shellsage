@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Copyright (c) 2025 zhanghongping (zhanghongping@gmail.com)
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+#
 
 # Common utility functions
 # Based on the original utils.ts functionality
