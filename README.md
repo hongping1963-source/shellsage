@@ -31,3 +31,18 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+The MIT License is a permissive license that is short and to the point. It lets people do anything they want with your code as long as they provide attribution back to you and don't hold you liable.
+
+### What you can do with this project:
+- ✔️ Commercial use
+- ✔️ Modify
+- ✔️ Distribute
+- ✔️ Private use
+
+### Requirements:
+- ℹ️ License and copyright notice
+
+### Limitations:
+- ❌ Liability
+- ❌ Warranty
