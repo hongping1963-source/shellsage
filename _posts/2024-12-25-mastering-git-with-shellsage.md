@@ -1,11 +1,11 @@
----
+﻿---
 layout: post
 title: "Mastering Git with ShellSage: A Complete Guide"
 date: 2024-12-25
 categories: [tutorials, git]
 tags: [git, version-control, productivity]
 author: Zhang Hongping
-author_email: zhanghongping1982@gmail.com
+author_email: support@shellsage.com
 ---
 
 # Mastering Git with ShellSage: A Complete Guide

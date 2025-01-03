@@ -1,4 +1,4 @@
----
+﻿---
 layout: post
 title: "Introducing ShellSage: Your AI-Powered Terminal Assistant"
 date: 2024-12-25
@@ -21,17 +21,17 @@ ShellSage is a powerful VS Code extension that brings intelligence to your termi
 
 ## Key Features
 
-### 🤖 Intelligent Command Suggestions
+### 馃 Intelligent Command Suggestions
 - Context-aware completions
 - Pattern recognition
 - Time-based predictions
 
-### 📊 Advanced Analytics
+### 馃搳 Advanced Analytics
 - Track your command usage patterns
 - Understand your success rates
 - Analyze command complexity
 
-### 🛡️ Error Prevention
+### 馃洝锔?Error Prevention
 - Real-time syntax validation
 - Smart alternatives for common mistakes
 - Helpful error messages

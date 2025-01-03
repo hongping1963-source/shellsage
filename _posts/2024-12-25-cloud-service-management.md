@@ -1,11 +1,11 @@
----
+﻿---
 layout: post
 title: "Cloud Service Management Best Practices"
 date: 2024-12-25
 categories: [tutorials, cloud]
 tags: [aws, azure, gcp, devops]
 author: Zhang Hongping
-author_email: zhanghongping1982@gmail.com
+author_email: support@shellsage.com
 ---
 
 # Cloud Service Management Best Practices
