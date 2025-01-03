@@ -14,32 +14,32 @@ ShellSage is your intelligent terminal companion in VS Code, designed to enhance
 - **Easy Integration**: Seamlessly integrates with VS Code's terminal
 - **Customizable Rules**: Define your own correction rules and preferences
 
-[Get Started →](/docs/installation/)
+[Get Started →]({{ site.baseurl }}/_docs/installation/)
 
 ## Latest Updates
 
 {% for post in site.posts limit:3 %}
-- [{{ post.title }}]({{ post.url }}) - {{ post.date | date: "%B %d, %Y" }}
+- [{{ post.title }}]({{ site.baseurl }}{{ post.url }}) - {{ post.date | date: "%B %d, %Y" }}
 {% endfor %}
 
-[View All Updates →](/blog/)
+[View All Updates →]({{ site.baseurl }}/blog/)
 
 ## Documentation
 
 Browse our comprehensive documentation to learn more about ShellSage:
 
-- [Installation Guide](/docs/installation/)
-- [User Guide](/docs/user-guide/)
-- [Configuration](/docs/configuration/)
-- [FAQ](/docs/faq/)
+- [Installation Guide]({{ site.baseurl }}/_docs/installation/)
+- [User Guide]({{ site.baseurl }}/_docs/user-guide/)
+- [Configuration]({{ site.baseurl }}/_docs/configuration/)
+- [FAQ]({{ site.baseurl }}/_docs/faq/)
 
 ## Contributing
 
-We welcome contributions! Check out our [contributing guidelines](/docs/contributing/) to get started.
+We welcome contributions! Check out our [contributing guidelines]({{ site.baseurl }}/_docs/contributing/) to get started.
 
 ## Support
 
-Need help? Check our [FAQ](/docs/faq/) or [open an issue]({{ site.github.repository_url }}/issues) on GitHub.
+Need help? Check our [FAQ]({{ site.baseurl }}/_docs/faq/) or [open an issue]({{ site.github.repository_url }}/issues) on GitHub.
 
 ## 🚀 Key Features
 
@@ -93,31 +93,31 @@ Need help? Check our [FAQ](/docs/faq/) or [open an issue]({{ site.github.reposit
   <div class="doc-card">
     <h3>📖 User Guide</h3>
     <p>Learn how to use ShellSage effectively</p>
-    <a href="{{ '/docs/user-guide' | relative_url }}" class="btn">Read More</a>
+    <a href="{{ site.baseurl }}/_docs/user-guide/" class="btn">Read More</a>
   </div>
 
   <div class="doc-card">
     <h3>🔧 Installation</h3>
     <p>Get started with ShellSage</p>
-    <a href="{{ '/docs/installation' | relative_url }}" class="btn">Read More</a>
+    <a href="{{ site.baseurl }}/_docs/installation/" class="btn">Read More</a>
   </div>
 
   <div class="doc-card">
     <h3>❓ FAQ</h3>
     <p>Common questions and answers</p>
-    <a href="{{ '/docs/faq' | relative_url }}" class="btn">Read More</a>
+    <a href="{{ site.baseurl }}/_docs/faq/" class="btn">Read More</a>
   </div>
 
   <div class="doc-card">
     <h3>🤝 Contributing</h3>
     <p>Join our development community</p>
-    <a href="{{ '/docs/contributing' | relative_url }}" class="btn">Read More</a>
+    <a href="{{ site.baseurl }}/_docs/contributing/" class="btn">Read More</a>
   </div>
 </div>
 
 ## 📊 Project Status
 
-Visit our [Project Status]({{ '/docs/project-status' | relative_url }}) page to:
+Visit our [Project Status]({{ site.baseurl }}/docs/project-status/) page to:
 - See implemented features
 - Check upcoming features
 - View development roadmap
@@ -127,7 +127,7 @@ Visit our [Project Status]({{ '/docs/project-status' | relative_url }}) page to:
 
 {% for post in site.posts limit:3 %}
 <div class="update-card">
-  <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+  <h3><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h3>
   <time>{{ post.date | date: "%B %d, %Y" }}</time>
   <p>{{ post.excerpt }}</p>
 </div>
@@ -135,7 +135,7 @@ Visit our [Project Status]({{ '/docs/project-status' | relative_url }}) page to:
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Check out our [Contributing Guide]({{ '/docs/contributing' | relative_url }}) to:
+We welcome contributions from the community! Check out our [Contributing Guide]({{ site.baseurl }}/_docs/contributing/) to:
 - Report bugs
 - Suggest features
 - Submit pull requests
@@ -143,7 +143,7 @@ We welcome contributions from the community! Check out our [Contributing Guide](
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE]({{ '/LICENSE' | relative_url }}) file for details.
+This project is licensed under the MIT License - see the [LICENSE]({{ site.baseurl }}/LICENSE) file for details.
 
 <style>
 .doc-grid {
