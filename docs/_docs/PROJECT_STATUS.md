@@ -100,35 +100,6 @@
 
 详细的贡献指南请参考 [CONTRIBUTING_GUIDE.md](./CONTRIBUTING_GUIDE.md)
 
-## 版本发布计划
+## 项目状态文档更新
 
-### v0.2.0-beta (2024 Q1)
-- 完善错误检测
-- 添加更多Shell支持
-- 基础文档完善
-
-### v0.3.0-beta (2024 Q2)
-- AI增强的建议系统
-- 内联建议功能
-- 性能优化
-
-### v1.0.0 (2024 Q4)
-- 完整的功能集
-- 稳定的性能表现
-- 完善的文档和社区支持
-
-## 更新日志
-
-### v0.1.0-alpha (当前版本)
-- 基础Shell集成
-- 简单的错误检测
-- VS Code基础集成
-- 基本的配置选项
-
-## 反馈渠道
-
-- GitHub Issues: 用于bug报告和功能请求
-- GitHub Discussions: 用于一般讨论和问题解答
-- Email Support: support@shellsage.com（计划中）
-
-我们会定期更新此文档以反映最新的项目状态和计划。
+项目状态文档已更新到新的位置，欢迎访问新的文档地址：[https://shellsage.github.io/project-status](https://shellsage.github.io/project-status)
