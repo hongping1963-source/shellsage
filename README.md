@@ -16,7 +16,7 @@
 
 当前版本：v0.2.0-alpha（早期开发阶段）
 
-[查看完整项目状态和路线图](./docs/PROJECT_STATUS.md)
+[查看完整项目状态和路线图](./docs/_docs/PROJECT_STATUS.md)
 
 ### 已实现功能
 - ✅ 基础Shell集成
@@ -106,15 +106,15 @@ $ dcoker ps
 - `shellsage.maxSuggestions`: 最大建议数量
 - `shellsage.confidenceThreshold`: 最低置信度阈值
 
-详细配置选项请参考[配置文档](./docs/CONFIGURATION.md)。
+详细配置选项请参考[配置文档](./docs/_docs/CONFIGURATION.md)。
 
 ## 📚 文档
 
-- [使用指南](./docs/FAQ_IMPROVEMENT.md)
-- [开发指南](./docs/DEVELOPMENT.md)
-- [贡献指南](./docs/CONTRIBUTING_GUIDE.md)
-- [项目状态](./docs/PROJECT_STATUS.md)
-- [常见问题](./docs/FAQ_IMPROVEMENT.md)
+- [使用指南](./docs/_docs/FAQ_IMPROVEMENT.md)
+- [开发指南](./docs/_docs/DEVELOPMENT.md)
+- [贡献指南](./docs/_docs/CONTRIBUTING_GUIDE.md)
+- [项目状态](./docs/_docs/PROJECT_STATUS.md)
+- [常见问题](./docs/_docs/FAQ_IMPROVEMENT.md)
 
 ## 🤝 参与贡献
 
@@ -122,10 +122,10 @@ $ dcoker ps
 
 - 🐛 [报告问题](https://github.com/hongping1963-source/shellsage/issues)
 - 💡 [提出建议](https://github.com/hongping1963-source/shellsage/issues)
-- 📝 [改进文档](./docs/CONTRIBUTING_GUIDE.md)
-- 💻 [提交代码](./docs/CONTRIBUTING_GUIDE.md)
+- 📝 [改进文档](./docs/_docs/CONTRIBUTING_GUIDE.md)
+- 💻 [提交代码](./docs/_docs/CONTRIBUTING_GUIDE.md)
 
-查看[贡献指南](./docs/CONTRIBUTING_GUIDE.md)了解更多信息。
+查看[贡献指南](./docs/_docs/CONTRIBUTING_GUIDE.md)了解更多信息。
 
 ## 📄 许可证
 
